@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/svg.php';
+require_once __DIR__ . '/includes/functions.php';
 $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหัศจรรย์ริมสายน้ำ';
 ?>
 <!DOCTYPE html>
@@ -10,6 +11,7 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
     <meta name="theme-color" content="#102d25">
     <meta name="description" content="ร่วมลอยกระทงออนไลน์ สร้างกระทง เลือกดอกไม้ และส่งคำอธิษฐานไปกับสายน้ำแห่งความสุข">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
+    <?php renderMetaTags('', ['title' => $pageTitle, 'path' => '']); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -64,7 +66,7 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
 
     <footer class="site-footer">
         <span class="footer-brand"><?= svgLotusIcon() ?> ลอยกระทงออนไลน์</span>
-        <span>สร้างความสุขเล็ก ๆ ไปกับสายน้ำ</span>
+        <span>สร้างความสุขเล็ก ๆ ไปกับสายน้ำ · <a class="footer-link" href="pages/privacy.php">ความเป็นส่วนตัว</a></span>
     </footer>
 
     <script src="assets/js/script.js"></script>

@@ -25,7 +25,7 @@ h1, h2, h3 { font-family: inherit; }
 .scene, .scene-shade, .fireflies { position: fixed; inset: 0; pointer-events: none; }
 .scene {
     z-index: -3;
-    background: url('../images/backgrounds/river-night.png') center 48% / cover no-repeat;
+    background: url('../images/backgrounds/river-night.webp') center 48% / cover no-repeat;
     transform: scale(1.015);
 }
 .scene-shade {
@@ -422,7 +422,7 @@ h1 span { color: var(--gold); }
     --w: max(100vw, 177.78svh); --h: calc(var(--w) * .5628);
     position: relative; width: var(--w); height: var(--h);
     margin-top: calc((100svh - var(--h)) / 2);
-    background: url('../images/backgrounds/river-night.png') center / 100% 100% no-repeat;
+    background: url('../images/backgrounds/river-night.webp') center / 100% 100% no-repeat;
 }
 .river-glint { position: absolute; left: 18%; right: 0; top: 58%; height: 30%; pointer-events: none; opacity: .5; mix-blend-mode: screen;
     background: radial-gradient(ellipse 14px 3px at 20px 10px, rgba(255,235,170,.85), transparent 70%) 0 0 / 90px 42px, radial-gradient(ellipse 18px 3px at 60px 30px, rgba(255,235,170,.7), transparent 70%) 0 0 / 130px 56px;
@@ -481,3 +481,22 @@ h1 span { color: var(--gold); }
     .wish-dialog { padding: 26px 18px 20px; }
 }
 @media (prefers-reduced-motion: reduce) { .rk-bob, .river-glint, .rk-ring::before, .rk-ring::after { animation: none; } .rk-ring { opacity: 1; } }
+
+
+/* ---- เพิ่มภายหลัง: honeypot, ข้อความแจ้งความเป็นส่วนตัว, ลิงก์ท้ายเว็บ ---- */
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.review-notice { margin: 14px 0 0; font-size: .85rem; line-height: 1.6; opacity: .8; }
+.footer-link { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.footer-link:hover { opacity: .8; }
+.legal-panel { max-width: 720px; margin: 0 auto; line-height: 1.8; }
+.legal-panel h2 { margin-top: 1.6em; }
+
+/* ---- หน้าผู้ดูแล ---- */
+.admin-panel { max-width: 960px; }
+.admin-login { display: grid; gap: 12px; max-width: 360px; }
+.admin-login input { padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(232, 194, 106, .35); background: rgba(0, 0, 0, .25); color: inherit; font: inherit; }
+.admin-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0; }
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: .9rem; line-height: 1.5; }
+.admin-table th, .admin-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255, 255, 255, .12); text-align: left; vertical-align: top; }
+.admin-table tr.is-hidden td { opacity: .45; }

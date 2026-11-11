@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+// เพิ่มเลขนี้ทุกครั้งที่แก้ schema.sql / seed.sql หรือโครงสร้างตาราง เพื่อให้ฐานข้อมูลเดิมถูกอัปเกรดอีกหนึ่งครั้ง
+const DB_SCHEMA_VERSION = 2;
+
 function getDatabase(): PDO
 {
     static $pdo = null;
@@ -12,19 +15,45 @@ function getDatabase(): PDO
         throw new RuntimeException('PHP ยังไม่ได้เปิดใช้งานส่วนขยาย PDO SQLite กรุณาเปิดใช้งาน pdo_sqlite ใน php.ini');
     }
 
+    // โฟลเดอร์ database/ เก็บ schema.sql และ seed.sql (ไฟล์ตั้งต้น)
     $databaseDirectory = dirname(__DIR__) . '/database';
     if (!is_dir($databaseDirectory) && !mkdir($databaseDirectory, 0775, true) && !is_dir($databaseDirectory)) {
         throw new RuntimeException('ไม่สามารถสร้างโฟลเดอร์ฐานข้อมูลได้');
     }
 
-    $databasePath = $databaseDirectory . '/database.sqlite';
+    // แนะนำให้ตั้ง KRATHONG_DB_PATH ไปยังตำแหน่ง "นอก web root" เช่น /var/lib/krathong/database.sqlite
+    // (ถ้าไม่ตั้ง จะใช้ database/database.sqlite เหมือนเดิม โดยต้องมี .htaccess/nginx rule กันไม่ให้ดาวน์โหลด)
+    $envPath = getenv('KRATHONG_DB_PATH');
+    $databasePath = ($envPath !== false && $envPath !== '') ? $envPath : $databaseDirectory . '/database.sqlite';
+    $databaseFileDirectory = dirname($databasePath);
+    if (!is_dir($databaseFileDirectory) && !mkdir($databaseFileDirectory, 0775, true) && !is_dir($databaseFileDirectory)) {
+        throw new RuntimeException('ไม่สามารถสร้างโฟลเดอร์เก็บไฟล์ฐานข้อมูลได้');
+    }
     $pdo = new PDO('sqlite:' . $databasePath, null, null, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
     $pdo->exec('PRAGMA foreign_keys = ON');
+    $pdo->exec('PRAGMA busy_timeout = 5000');   // รอคิวเขียนสูงสุด 5 วินาที แทนที่จะ error "database is locked"
+    $pdo->exec('PRAGMA journal_mode = WAL');    // อ่านและเขียนพร้อมกันได้ ช่วยตอนคนเข้าเยอะ
 
+    // รันสร้างตาราง/ย้ายข้อมูล/seed เฉพาะตอนที่ฐานข้อมูลยังไม่ถึงเวอร์ชันปัจจุบัน (ไม่ทำทุก request)
+    $currentVersion = (int) $pdo->query('PRAGMA user_version')->fetchColumn();
+    if ($currentVersion < DB_SCHEMA_VERSION) {
+        migrateDatabase($pdo, $databaseDirectory);
+        $pdo->exec('PRAGMA user_version = ' . DB_SCHEMA_VERSION);
+    }
+
+    return $pdo;
+}
+
+/**
+ * สร้างตาราง ย้ายฐานข้อมูลรุ่นเก่า และ seed ข้อมูล (ปลอดภัยที่จะรันซ้ำ)
+ * ถ้าแก้ schema.sql / seed.sql ภายหลัง ให้เพิ่มค่า DB_SCHEMA_VERSION เพื่อให้รันอีกครั้งหนึ่ง
+ */
+function migrateDatabase(PDO $pdo, string $databaseDirectory): void
+{
     $schemaPath = $databaseDirectory . '/schema.sql';
     if (!is_file($schemaPath)) {
         throw new RuntimeException('ไม่พบไฟล์ database/schema.sql');
@@ -74,15 +103,24 @@ function getDatabase(): PDO
     };
     $ensureColumn('krathongs', 'krathong_type_id', 'INTEGER REFERENCES krathong_types(id)');
     $ensureColumn('krathongs', 'flower_set_id', 'INTEGER REFERENCES flower_sets(id)');
+    $ensureColumn('krathongs', 'is_hidden', 'INTEGER NOT NULL DEFAULT 0');   // 1 = ผู้ดูแลซ่อนกระทงนี้
     $ensureColumn('flowers', 'image_path', "TEXT NOT NULL DEFAULT ''");
     $ensureColumn('flowers', 'svg_key', "TEXT NOT NULL DEFAULT ''");
     $ensureColumn('krathong_types', 'svg_key', "TEXT NOT NULL DEFAULT ''");
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_krathongs_visible ON krathongs(is_hidden, id DESC)');
+
+    // บันทึกเหตุการณ์สำหรับจำกัดอัตราการใช้งาน (rate limit) เก็บเฉพาะค่า hash ของ IP
+    $pdo->exec('CREATE TABLE IF NOT EXISTS rate_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bucket TEXT NOT NULL,
+        ip_hash TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+    )');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_rate_events_lookup ON rate_events(bucket, ip_hash, created_at)');
 
     // Seed data that depends on the columns above (SVG keys, flower sets). Safe to run repeatedly.
     $seedPath = $databaseDirectory . '/seed.sql';
     if (is_file($seedPath)) {
         $pdo->exec((string) file_get_contents($seedPath));
     }
-
-    return $pdo;
 }

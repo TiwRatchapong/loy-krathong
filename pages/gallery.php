@@ -12,7 +12,7 @@ $total = 0;
 $error = '';
 try {
     $pdo = getDatabase();
-    $total = (int) $pdo->query('SELECT COUNT(*) FROM krathongs')->fetchColumn();
+    $total = (int) $pdo->query('SELECT COUNT(*) FROM krathongs WHERE is_hidden = 0')->fetchColumn();
     $pages = max(1, (int) ceil($total / GALLERY_PER_PAGE));
     $page = min($page, $pages);
     $krathongs = loadKrathongs($pdo, '', [], GALLERY_PER_PAGE, ($page - 1) * GALLERY_PER_PAGE);

@@ -1,11 +1,12 @@
 <?php
 declare(strict_types=1);
 
-session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/svg.php';
 require_once __DIR__ . '/../includes/profanity.php';
+
+startSecureSession();
 
 $prayerOptions = [
     'ขอให้ตัวฉันและครอบครัวมีความสุข สุขภาพแข็งแรง และพบเจอแต่สิ่งดี ๆ',
@@ -38,6 +39,14 @@ try {
         $prayer = trim((string) ($_POST['prayer'] ?? ''));
         $selectedFlowerSetId = (int) ($_POST['flower_set_id'] ?? 0);
 
+        // ช่องล่อบอท (honeypot): ผู้ใช้จริงมองไม่เห็นและไม่กรอก ถ้ามีค่าแสดงว่าเป็นสคริปต์
+        if (trim((string) ($_POST['website'] ?? '')) !== '') {
+            redirect('river.php');
+        }
+        // จำกัดจำนวนกระทงต่อ IP: 8 ใบ / 10 นาที และ 30 ใบ / วัน (นับทุกครั้งที่กดส่ง)
+        if (!rateLimitAllow($pdo, 'create_burst', 8, 600) || !rateLimitAllow($pdo, 'create_daily', 30, 86400)) {
+            $errors[] = 'ส่งกระทงถี่เกินไป กรุณารอสักครู่แล้วลองใหม่อีกครั้ง';
+        }
         if (!isset($_POST['csrf_token'], $_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], (string) $_POST['csrf_token'])) {
             $errors[] = 'เซสชันหมดอายุ กรุณารีเฟรชหน้าแล้วลองอีกครั้ง';
         }
@@ -108,6 +117,7 @@ if (empty($_SESSION['csrf_token'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#102d25">
     <title>สร้างกระทง | ลอยกระทงออนไลน์</title>
+    <?php renderMetaTags('../', ['title' => 'สร้างกระทง | ลอยกระทงออนไลน์', 'path' => 'pages/create.php']); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -137,6 +147,7 @@ if (empty($_SESSION['csrf_token'])) {
             <form class="create-layout wizard-layout" method="post" action="create.php" id="krathongWizard" data-check-url="check_text.php" novalidate>
                 <input type="hidden" name="csrf_token" value="<?= e($_SESSION['csrf_token']) ?>">
                 <input type="hidden" name="prayer" id="prayerValue" value="<?= e($prayer) ?>">
+                <div class="hp-field" aria-hidden="true"><label>เว็บไซต์ (ไม่ต้องกรอก)<input type="text" name="website" tabindex="-1" autocomplete="off" value=""></label></div>
                 <div class="form-panel wizard-panel">
                     <div class="wizard-progress" aria-label="ความคืบหน้าการสร้างกระทง">
                         <div class="wizard-progress-top"><span id="stepLabel">ขั้นตอนที่ 1 จาก 5</span><span id="stepPercent">20%</span></div>
@@ -201,6 +212,7 @@ if (empty($_SESSION['csrf_token'])) {
                             <div class="review-row"><span>รูปแบบกระทง</span><strong id="reviewKrathong">—</strong></div>
                             <div class="review-row review-flower-row"><span>ชุดดอกไม้ (5 ดอก)</span><strong id="reviewFlowers">—</strong></div>
                             <div class="review-prayer"><span>คำอธิษฐาน</span><p id="reviewPrayer">—</p></div>
+                            <p class="review-notice">ชื่อเล่นและคำอธิษฐานจะแสดงให้ผู้เข้าชมทุกคนเห็นบนแม่น้ำและหน้าแกลเลอรี ไม่ควรใส่ข้อมูลส่วนตัว เช่น เบอร์โทรหรือที่อยู่ · <a class="footer-link" href="privacy.php" target="_blank" rel="noopener">ความเป็นส่วนตัว</a></p>
                         </div>
                         <p class="wizard-hint">เมื่อกดยืนยัน ระบบจะบันทึกกระทงและคำอธิษฐานของคุณ</p>
                     </section>

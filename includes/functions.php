@@ -12,6 +12,131 @@ function redirect(string $url): never
     exit;
 }
 
+/** กำลังใช้ HTTPS หรือไม่ (รองรับหลัง proxy เมื่อตั้ง KRATHONG_TRUST_PROXY=1) */
+function isHttps(): bool
+{
+    if (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') {
+        return true;
+    }
+    return getenv('KRATHONG_TRUST_PROXY') === '1'
+        && strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+}
+
+/** เริ่มเซสชันพร้อม cookie ที่ปลอดภัยขึ้น (HttpOnly, SameSite=Lax, Secure เมื่อใช้ HTTPS) */
+function startSecureSession(): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        return;
+    }
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure' => isHttps(),
+    ]);
+    session_start();
+}
+
+/**
+ * IP ของผู้ใช้ ใช้ REMOTE_ADDR เป็นหลัก
+ * ถ้าเว็บอยู่หลัง Cloudflare/Reverse proxy ให้ตั้ง KRATHONG_TRUST_PROXY=1 เพื่ออ่าน IP จริงจาก header
+ * (เปิดเฉพาะเมื่ออยู่หลัง proxy จริงเท่านั้น ไม่เช่นนั้นผู้ใช้ปลอม header เลี่ยงการจำกัดได้)
+ */
+function clientIp(): string
+{
+    if (getenv('KRATHONG_TRUST_PROXY') === '1') {
+        $cf = (string) ($_SERVER['HTTP_CF_CONNECTING_IP'] ?? '');
+        if ($cf !== '' && filter_var($cf, FILTER_VALIDATE_IP)) {
+            return $cf;
+        }
+        $xff = trim(explode(',', (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ''))[0]);
+        if ($xff !== '' && filter_var($xff, FILTER_VALIDATE_IP)) {
+            return $xff;
+        }
+    }
+    return (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+}
+
+/**
+ * จำกัดจำนวนครั้งต่อ IP ในช่วงเวลาหนึ่ง คืนค่า true = ทำได้ (และบันทึกครั้งนี้ไว้), false = เกินที่กำหนด
+ * เก็บเฉพาะ hash ของ IP ไม่เก็บ IP จริง ถ้าฐานข้อมูลมีปัญหาจะ "ปล่อยผ่าน" เพื่อไม่ให้ผู้ใช้ปกติใช้งานไม่ได้
+ */
+function rateLimitAllow(PDO $pdo, string $bucket, int $max, int $windowSeconds): bool
+{
+    try {
+        $now = time();
+        $ipHash = hash('sha256', 'krathong-rl|' . clientIp());
+        $count = $pdo->prepare('SELECT COUNT(*) FROM rate_events WHERE bucket = :b AND ip_hash = :ip AND created_at > :since');
+        $count->execute([':b' => $bucket, ':ip' => $ipHash, ':since' => $now - $windowSeconds]);
+        if ((int) $count->fetchColumn() >= $max) {
+            return false;
+        }
+        $pdo->prepare('INSERT INTO rate_events (bucket, ip_hash, created_at) VALUES (:b, :ip, :t)')
+            ->execute([':b' => $bucket, ':ip' => $ipHash, ':t' => $now]);
+        if (random_int(1, 100) === 1) {   // เก็บกวาดข้อมูลเก่าเป็นครั้งคราว
+            $pdo->prepare('DELETE FROM rate_events WHERE created_at < :t')->execute([':t' => $now - 86400]);
+        }
+        return true;
+    } catch (Throwable $exception) {
+        error_log('rate limit: ' . $exception->getMessage());
+        return true;
+    }
+}
+
+/** URL หลักของเว็บ (ใช้ใน og:url / og:image ที่ต้องเป็น URL เต็ม) ตั้ง KRATHONG_BASE_URL เพื่อกำหนดเอง เช่น https://example.com */
+function siteBaseUrl(): string
+{
+    $configured = (string) getenv('KRATHONG_BASE_URL');
+    if ($configured !== '') {
+        return rtrim($configured, '/');
+    }
+    $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost');
+    if (!preg_match('/^[A-Za-z0-9.\-]+(:\d{1,5})?$/', $host)) {
+        $host = 'localhost';
+    }
+    $root = realpath(__DIR__ . '/..') ?: '';
+    $docRoot = realpath((string) ($_SERVER['DOCUMENT_ROOT'] ?? '')) ?: '';
+    $subPath = ($docRoot !== '' && str_starts_with($root, $docRoot)) ? str_replace('\\', '/', substr($root, strlen($docRoot))) : '';
+    return (isHttps() ? 'https://' : 'http://') . $host . rtrim($subPath, '/');
+}
+
+function absoluteUrl(string $path): string
+{
+    return siteBaseUrl() . '/' . ltrim($path, '/');
+}
+
+/**
+ * แท็ก favicon + Open Graph/Twitter Card (ให้ลิงก์ที่แชร์ใน LINE/Facebook มี preview)
+ *
+ * @param string $assetPrefix prefix ของไฟล์ assets เมื่อมองจากหน้าปัจจุบัน ('' หน้าแรก, '../' หน้าใน /pages)
+ * @param array{title?:string, description?:string, path?:string} $meta
+ */
+function renderMetaTags(string $assetPrefix, array $meta = []): void
+{
+    $title = $meta['title'] ?? 'ลอยกระทงออนไลน์ | คืนมหัศจรรย์ริมสายน้ำ';
+    $description = $meta['description'] ?? 'ร่วมลอยกระทงออนไลน์ สร้างกระทง เลือกดอกไม้ และส่งคำอธิษฐานไปกับสายน้ำแห่งความสุข';
+    $url = absoluteUrl($meta['path'] ?? '');
+    $image = absoluteUrl('assets/images/og-cover.jpg');
+    ?>
+    <link rel="icon" type="image/svg+xml" href="<?= e($assetPrefix) ?>assets/images/favicon.svg">
+    <link rel="canonical" href="<?= e($url) ?>">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ลอยกระทงออนไลน์">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:title" content="<?= e($title) ?>">
+    <meta property="og:description" content="<?= e($description) ?>">
+    <meta property="og:url" content="<?= e($url) ?>">
+    <meta property="og:image" content="<?= e($image) ?>">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= e($title) ?>">
+    <meta name="twitter:description" content="<?= e($description) ?>">
+    <meta name="twitter:image" content="<?= e($image) ?>">
+<?php
+}
+
 /**
  * โหลดชุดดอกไม้ทั้งหมดพร้อมรายการดอกไม้ในแต่ละชุด
  *
@@ -58,14 +183,14 @@ function loadFlowerSets(PDO $pdo): array
 /**
  * โหลดกระทงที่บันทึกแล้วพร้อมข้อมูลสำหรับวาดภาพ (svg_key ของกระทงและดอกไม้เรียงตามช่อง)
  *
- * @param string $where เงื่อนไข SQL ที่ใช้ alias k (krathongs) เช่น 'k.id = :id' (ว่างได้)
+ * @param string $where เงื่อนไข SQL ที่ใช้ alias k (krathongs) เช่น 'k.id = :id' (ว่างได้) — กระทงที่ผู้ดูแลซ่อน (is_hidden = 1) จะไม่ถูกโหลดเสมอ
  * @return array<int, array<string,mixed>>
  */
 function loadKrathongs(PDO $pdo, string $where = '', array $params = [], int $limit = 24, int $offset = 0): array
 {
     $sql = 'SELECT k.id, k.nickname, k.prayer, k.prayer_type, k.created_at, k.flower_set_id, t.svg_key AS krathong_key, t.name AS krathong_name
             FROM krathongs k LEFT JOIN krathong_types t ON t.id = k.krathong_type_id'
-        . ($where !== '' ? ' WHERE ' . $where : '')
+        . ' WHERE k.is_hidden = 0' . ($where !== '' ? ' AND (' . $where . ')' : '')
         . ' ORDER BY k.id DESC LIMIT ' . max(1, $limit) . ' OFFSET ' . max(0, $offset);
     $statement = $pdo->prepare($sql);
     $statement->execute($params);
@@ -133,7 +258,7 @@ function renderSiteHeader(string $active = ''): void
 }
 
 /** ส่วน <head> และส่วนหัวของหน้าที่ใช้ร่วมกัน (view / gallery / river) */
-function renderPageTop(string $title, string $bodyClass = 'create-page', string $active = ''): void
+function renderPageTop(string $title, string $bodyClass = 'create-page', string $active = '', array $meta = []): void
 {
     ?><!DOCTYPE html>
 <html lang="th">
@@ -142,6 +267,7 @@ function renderPageTop(string $title, string $bodyClass = 'create-page', string 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#102d25">
     <title><?= e($title) ?> | ลอยกระทงออนไลน์</title>
+    <?php renderMetaTags('../', $meta + ['title' => $title . ' | ลอยกระทงออนไลน์', 'path' => 'pages/' . basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''))]); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -157,7 +283,7 @@ function renderPageTop(string $title, string $bodyClass = 'create-page', string 
 function renderPageBottom(string $script = ''): void
 {
     ?>
-    <footer class="site-footer"><span class="footer-brand"><?= svgLotusIcon() ?> ลอยกระทงออนไลน์</span><span>ขอให้ค่ำคืนนี้เต็มไปด้วยความสุข</span></footer>
+    <footer class="site-footer"><span class="footer-brand"><?= svgLotusIcon() ?> ลอยกระทงออนไลน์</span><span>ขอให้ค่ำคืนนี้เต็มไปด้วยความสุข · <a class="footer-link" href="privacy.php">ความเป็นส่วนตัว</a></span></footer>
     <script src="../assets/js/script.js"></script>
     <?php if ($script !== ''): ?><script src="../assets/js/<?= e($script) ?>"></script><?php endif; ?>
 </body>

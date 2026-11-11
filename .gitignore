@@ -2,3 +2,6 @@
 /database/*.sqlite-journal
 .DS_Store
 Thumbs.db
+/config/admin.php
+/database/*.sqlite-wal
+/database/*.sqlite-shm

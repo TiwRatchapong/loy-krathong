@@ -16,7 +16,7 @@ try {
     if ($mineId > 0) {
         $mine = loadKrathongs($pdo, 'k.id = :id', [':id' => $mineId], 1)[0] ?? null;
     }
-    $total = (int) $pdo->query('SELECT COUNT(*) FROM krathongs')->fetchColumn();
+    $total = (int) $pdo->query('SELECT COUNT(*) FROM krathongs WHERE is_hidden = 0')->fetchColumn();
     $rows = loadKrathongs($pdo, $mine ? 'k.id <> :id' : '', $mine ? [':id' => $mine['id']] : [], RIVER_MAX);
     $taken = [];
     if ($mine) {

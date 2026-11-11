@@ -22,7 +22,14 @@ if ($krathong === null && $error === '') {
     http_response_code(404);
 }
 
-renderPageTop($krathong ? 'กระทงของ ' . $krathong['nickname'] : 'ไม่พบกระทง');
+$viewMeta = [];
+if ($krathong) {
+    $viewMeta = [
+        'description' => 'คำอธิษฐานจาก ' . $krathong['nickname'] . ': ' . mb_strimwidth((string) $krathong['prayer'], 0, 140, '…', 'UTF-8'),
+        'path' => 'pages/view.php?id=' . (int) $krathong['id'],
+    ];
+}
+renderPageTop($krathong ? 'กระทงของ ' . $krathong['nickname'] : 'ไม่พบกระทง', 'create-page', '', $viewMeta);
 ?>
     <main class="create-shell">
         <?php if ($krathong): ?>

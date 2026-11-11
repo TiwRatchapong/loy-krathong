@@ -1,0 +1,27 @@
+# ปิดไม่ให้ดาวน์โหลดไฟล์ภายใน (ใช้กับ Apache; ถ้าใช้ nginx ดู README หัวข้อ "การนำขึ้นเซิร์ฟเวอร์")
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(database|config|includes)(/|$) - [F,L]
+</IfModule>
+
+<FilesMatch "\.(sqlite|sqlite-wal|sqlite-shm|sqlite-journal|sql|md|log)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# เคาะไฟล์ภาพ/CSS/JS ให้ browser จำไว้ (ลดการโหลดซ้ำ)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/webp "access plus 30 days"
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType text/css "access plus 1 day"
+    ExpiresByType application/javascript "access plus 1 day"
+</IfModule>

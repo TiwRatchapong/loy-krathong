@@ -48,7 +48,9 @@
 
 - `index.php` หน้าแรก
 - `pages/create.php` ฟอร์มสร้างและบันทึกกระทง
-- `pages/gallery.php` หน้าแกลเลอรี (Phase ถัดไป)
+- `pages/river.php` หน้าแม่น้ำของทุกคน / `pages/gallery.php` มุมมองรายการ / `pages/view.php` หน้าแชร์กระทง
+- `pages/privacy.php` ความเป็นส่วนตัว
+- `admin/index.php` หน้าผู้ดูแล (ซ่อน/แสดงกระทง)
 - `config/database.php` การเชื่อมต่อและเริ่มต้นฐานข้อมูล
 - `database/schema.sql` โครงสร้างตารางและข้อมูลกระทง 10 แบบ/ดอกไม้ 15 ชนิดตั้งต้น
 - `includes/functions.php` ฟังก์ชันช่วยเหลือ, Escape HTML และโหลดชุดดอกไม้
@@ -71,3 +73,38 @@
 ## หมายเหตุ
 
 ไฟล์ฐานข้อมูลจริง `database/database.sqlite` จะถูกสร้างในเครื่องและถูก ignore โดย Git ไม่ควร commit ไฟล์ฐานข้อมูลขึ้น Repository
+
+## การนำขึ้นเซิร์ฟเวอร์ (ความปลอดภัย)
+
+1. **ย้ายไฟล์ฐานข้อมูลไปไว้นอก web root** แล้วตั้ง environment variable เช่น
+   `KRATHONG_DB_PATH=/var/lib/krathong/database.sqlite` (โฟลเดอร์ต้องเขียนได้โดยผู้ใช้ที่รัน PHP)
+   ถ้าไม่ตั้ง จะใช้ `database/database.sqlite` ตามเดิม ซึ่งต้องกันไม่ให้ดาวน์โหลดได้
+2. **Apache**: มี `.htaccess` กันโฟลเดอร์ `database/`, `config/`, `includes/` และไฟล์ `.sqlite` ให้แล้ว
+   (ต้องเปิด `AllowOverride All`) — `php -S` ในเครื่อง **ไม่อ่าน** `.htaccess` ใช้เพื่อพัฒนาเท่านั้น
+3. **nginx**: เพิ่มใน server block
+   ```nginx
+   location ~ ^/(database|config|includes)/ { deny all; }
+   location ~* \.(sqlite|sqlite-wal|sqlite-shm|sql|md)$ { deny all; }
+   ```
+4. หลังตั้งค่าเสร็จ ลองเปิด `/database/database.sqlite` และ `/config/database.php` ในเบราว์เซอร์ ต้องได้ 403/404
+5. ถ้าอยู่หลัง Cloudflare/Reverse proxy ตั้ง `KRATHONG_TRUST_PROXY=1` เพื่อให้ rate limit ใช้ IP จริง
+   (อย่าเปิดถ้าไม่ได้อยู่หลัง proxy) และตั้ง `KRATHONG_BASE_URL=https://โดเมนของคุณ` เพื่อให้ og:url / og:image ถูกต้อง
+
+## ผู้ดูแลระบบ (ซ่อนกระทงที่ไม่เหมาะสม)
+
+1. สร้าง hash: `php -r "echo password_hash('รหัสผ่านของคุณ', PASSWORD_DEFAULT), PHP_EOL;"`
+2. คัดลอก `config/admin.sample.php` เป็น `config/admin.php` แล้วใส่ hash (หรือตั้ง `KRATHONG_ADMIN_HASH`)
+3. เปิด `/admin/` เพื่อเข้าสู่ระบบ กด "ซ่อน" เพื่อเอากระทงออกจากแม่น้ำ แกลเลอรี และหน้าแชร์ (ข้อมูลยังอยู่ในฐานข้อมูล กด "แสดงอีกครั้ง" ได้)
+
+## การป้องกันสแปม
+
+- จำกัดการสร้างกระทงต่อ IP: 8 ครั้ง / 10 นาที และ 30 ครั้ง / วัน (แก้ได้ใน `pages/create.php`)
+- `check_text.php` จำกัด 90 ครั้ง / นาที, หน้า admin จำกัดการเดารหัสผ่าน 5 ครั้ง / 10 นาที
+- มีช่อง honeypot ซ่อนไว้ในฟอร์ม สำหรับดักสคริปต์อัตโนมัติ
+- ระบบเก็บเฉพาะ hash ของ IP ใน `rate_events` และลบของเก่าเกิน 1 วันเป็นระยะ
+
+## ฐานข้อมูล: เวอร์ชัน schema
+
+การสร้างตาราง/ย้ายข้อมูล/seed จะรัน **เฉพาะตอนที่ `PRAGMA user_version` ต่ำกว่า `DB_SCHEMA_VERSION`**
+(`config/database.php`) ไม่ใช่ทุก request หากแก้ `schema.sql` หรือ `seed.sql` ให้เพิ่มเลข `DB_SCHEMA_VERSION` ด้วย
+ไม่เช่นนั้นการแก้จะไม่ถูกนำไปใช้กับฐานข้อมูลเดิม ระบบเปิดโหมด WAL ด้วย จึงอาจเห็นไฟล์ `*.sqlite-wal` / `*.sqlite-shm` ข้างไฟล์ฐานข้อมูล (เป็นเรื่องปกติ)

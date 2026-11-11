@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /database/
+Disallow: /config/
+Disallow: /includes/
