@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/svg.php';
+require_once __DIR__ . '/../includes/reports.php';
 
 const GALLERY_PER_PAGE = 24;
 $page = max(1, (int) ($_GET['page'] ?? 1));
@@ -68,6 +69,10 @@ renderPageTop('กระทงของทุกคน', 'create-page gallery-pa
         <p class="section-kicker">A WISH FROM</p>
         <h2 id="wishName"></h2>
         <blockquote id="wishText"></blockquote>
-        <a class="button button-ghost" id="wishLink" href="#">เปิดหน้ากระทง</a>
+        <div class="wish-actions">
+            <a class="button button-ghost" id="wishLink" href="#">เปิดหน้ากระทง</a>
+            <button type="button" class="report-link" id="wishReport" data-report-open>⚑ รายงานว่าไม่เหมาะสม</button>
+        </div>
     </dialog>
-<?php renderPageBottom('gallery.js'); ?>
+    <?php renderReportDialog(); ?>
+<?php renderPageBottom(['report.js', 'gallery.js']); ?>

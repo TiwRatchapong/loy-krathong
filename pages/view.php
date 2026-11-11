@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/svg.php';
+require_once __DIR__ . '/../includes/reports.php';
 
 $id = (int) ($_GET['id'] ?? 0);
 $isNew = isset($_GET['new']);
@@ -54,6 +55,9 @@ renderPageTop($krathong ? 'กระทงของ ' . $krathong['nickname'] : 
                     <a class="button button-ghost" href="create.php">สร้างกระทงอีกใบ</a>
                 </div>
                 <p class="view-copied" id="copiedNote" role="status" hidden>คัดลอกลิงก์แล้ว</p>
+                <?php if (!$isNew): ?>
+                    <p class="report-line reveal"><button type="button" class="report-link" data-report-open data-id="<?= (int) $krathong['id'] ?>">⚑ รายงานกระทงนี้ว่าไม่เหมาะสม</button></p>
+                <?php endif; ?>
             </section>
         <?php else: ?>
             <section class="success-panel">
@@ -63,4 +67,5 @@ renderPageTop($krathong ? 'กระทงของ ' . $krathong['nickname'] : 
             </section>
         <?php endif; ?>
     </main>
-<?php renderPageBottom('view.js'); ?>
+<?php if ($krathong && !$isNew) { renderReportDialog(); } ?>
+<?php renderPageBottom(['report.js', 'view.js']); ?>

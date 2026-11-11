@@ -5,15 +5,20 @@
 
     // Decorative fireflies are generated locally; no external library is required.
     if (fireflies && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        for (let i = 0; i < 24; i++) {
+        // เครื่องช้า/มือถือใช้จำนวนน้อยลง (แต่ละดวงเป็นเลเยอร์ที่มีเงาเรืองแสง)
+        const lowPower = window.matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency || 8) <= 4;
+        const count = lowPower ? 12 : 24;
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < count; i++) {
             const dot = document.createElement('span');
             dot.className = 'firefly';
             dot.style.left = `${Math.random() * 100}%`;
             dot.style.top = `${18 + Math.random() * 75}%`;
             dot.style.setProperty('--duration', `${4 + Math.random() * 7}s`);
             dot.style.animationDelay = `${Math.random() * -8}s`;
-            fireflies.appendChild(dot);
+            frag.appendChild(dot);
         }
+        fireflies.appendChild(frag);
     }
 
     if (menuToggle && mainNav) {
@@ -34,6 +39,6 @@
             if (mainNav.classList.contains('open') && !mainNav.contains(e.target)) setOpen(false);
         });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
-        window.matchMedia('(min-width: 761px)').addEventListener('change', () => setOpen(false));
+        window.matchMedia('(min-width: 901px)').addEventListener('change', () => setOpen(false));
     }
 })();

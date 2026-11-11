@@ -7,7 +7,7 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#102d25">
     <meta name="description" content="ร่วมลอยกระทงออนไลน์ สร้างกระทง เลือกดอกไม้ และส่งคำอธิษฐานไปกับสายน้ำแห่งความสุข">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
@@ -15,6 +15,7 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="assets/images/backgrounds/river-night.webp" type="image/webp">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -34,7 +35,6 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
 
         <nav class="main-nav" id="mainNav">
             <a class="nav-link active" href="index.php">หน้าแรก</a>
-            <a class="nav-link" href="pages/create.php">สร้างกระทง</a>
             <a class="nav-link" href="pages/river.php">แม่น้ำของทุกคน</a>
             <a class="nav-cta" href="pages/create.php">เริ่มลอยกระทง <span>↗</span></a>
         </nav>
@@ -70,5 +70,6 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
     </footer>
 
     <script src="assets/js/script.js"></script>
+    <script src="assets/js/audio.js"></script>
 </body>
 </html>

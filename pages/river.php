@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/svg.php';
+require_once __DIR__ . '/../includes/reports.php';
 
 const RIVER_MAX = 40;   // จำนวนกระทงของคนอื่นที่แสดงพร้อมกัน (ล่าสุดก่อน)
 $mine = null;
@@ -45,6 +46,7 @@ function renderRiverKrathong(array $k, bool $isMine): string
         . '<span class="rk-drift"><span class="rk-release"><span class="rk-arc"><span class="rk-bob">' . $art . '</span></span></span>'
         . ($isMine ? '<span class="rk-ring"></span>' : '')
         . '<span class="rk-splash"></span>'
+        . '<span class="rk-wish" aria-hidden="true">' . e($k['prayer']) . '</span>'
         . '<span class="rk-tag">' . ($isMine ? '✦ กระทงของคุณ' : e($k['nickname'])) . '</span></span></button>';
 }
 
@@ -85,9 +87,15 @@ renderPageTop('แม่น้ำของทุกคน', 'river-page', 'river
         <p class="section-kicker">A WISH FROM</p>
         <h2 id="wishName"></h2>
         <blockquote id="wishText"></blockquote>
-        <a class="button button-ghost" id="wishLink" href="#">เปิดหน้ากระทง</a>
+        <div class="wish-actions">
+            <a class="button button-ghost" id="wishLink" href="#">เปิดหน้ากระทง</a>
+            <button type="button" class="report-link" id="wishReport" data-report-open>⚑ รายงานว่าไม่เหมาะสม</button>
+        </div>
     </dialog>
+    <?php renderReportDialog(); ?>
     <script src="../assets/js/script.js"></script>
+    <script src="../assets/js/audio.js"></script>
+    <script src="../assets/js/report.js"></script>
     <script src="../assets/js/river.js"></script>
 </body>
 </html>

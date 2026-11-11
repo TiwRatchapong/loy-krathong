@@ -120,15 +120,6 @@ h1 span { color: var(--gold); }
     .site-header { height: 74px; width: calc(100% - 36px); }
     .brand { font-size: 18px; }
     .brand-mark { font-size: 26px; }
-    .menu-toggle { display: flex; flex-direction: column; gap: 5px; border: 0; background: transparent; padding: 10px 3px; cursor: pointer; }
-    .menu-toggle span { display: block; width: 23px; height: 2px; background: var(--cream); }
-    .main-nav { display: none; position: absolute; z-index: 5; top: calc(100% + 6px); left: 0; right: 0; padding: 12px 20px; flex-direction: column; align-items: stretch; gap: 0; font-size: 16px; background: rgba(12, 33, 29, .97); border: 1px solid rgba(232, 199, 126, .3); border-radius: 16px; backdrop-filter: blur(12px); }
-    .main-nav.open { display: flex; }
-    .main-nav .nav-link { padding: 13px 2px; border-bottom: 1px solid rgba(255, 245, 223, .1); }
-    .main-nav .nav-link:last-child { border-bottom: 0; }
-    .main-nav .nav-cta { margin: 8px 0; }
-    .nav-link.active { color: var(--gold); }
-    .nav-cta { text-align: center; }
     .hero { width: calc(100% - 40px); min-height: 690px; min-height: calc(88svh - 74px); padding: 55px 0 90px; align-items: center; }
     .scene { background-position: 58% center; }
     .scene-shade { background: linear-gradient(90deg, rgba(7, 27, 23, .78), rgba(9, 30, 26, .42)), linear-gradient(180deg, rgba(8, 27, 24, .2), rgba(8, 25, 22, .5)); }
@@ -160,7 +151,7 @@ h1 span { color: var(--gold); }
 .create-heading h1 span { color: var(--gold); margin-left: 10px; }
 .create-heading > p:last-child { color: var(--muted); margin: 14px 0 0; font-size: 15px; }
 .create-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .8fr); gap: 24px; align-items: start; }
-.form-panel, .preview-panel, .success-panel { border: 1px solid rgba(232,199,126,.2); background: rgba(9,29,25,.84); border-radius: 22px; backdrop-filter: blur(16px); box-shadow: 0 18px 55px rgba(0,0,0,.18); }
+.form-panel, .preview-panel, .success-panel { border: 1px solid rgba(232,199,126,.2); background: rgba(9,29,25,.9); border-radius: 22px; box-shadow: 0 18px 55px rgba(0,0,0,.18); }
 .form-panel { padding: 30px; }
 .form-section + .form-section { border-top: 1px solid rgba(255,245,223,.12); margin-top: 28px; padding-top: 27px; }
 .step-heading { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
@@ -339,7 +330,7 @@ h1 span { color: var(--gold); }
 @media (max-width: 820px) { .wizard-preview .krathong-preview { height: auto; max-width: 230px; } }
 
 /* ---------- View / Gallery ---------- */
-.view-panel { max-width: 640px; margin: 0 auto; padding: 38px 28px; text-align: center; border: 1px solid rgba(232,199,126,.2); background: rgba(9,29,25,.84); border-radius: 22px; backdrop-filter: blur(16px); box-shadow: 0 18px 55px rgba(0,0,0,.18); }
+.view-panel { max-width: 640px; margin: 0 auto; padding: 38px 28px; text-align: center; border: 1px solid rgba(232,199,126,.2); background: rgba(9,29,25,.9); border-radius: 22px; box-shadow: 0 18px 55px rgba(0,0,0,.18); }
 .view-title { margin: 6px 0 4px; font-size: clamp(28px, 6vw, 38px); font-weight: 500; letter-spacing: 0; line-height: 1.4; text-shadow: none; }
 .create-shell h1 { letter-spacing: 0; }
 .view-stage { position: relative; width: min(100%, 420px); margin: 12px auto 6px; }
@@ -362,7 +353,7 @@ h1 span { color: var(--gold); }
 .gallery-pager .button { min-height: 44px; padding: 0 20px; width: auto; }
 
 .wish-dialog { width: min(480px, calc(100% - 32px)); padding: 30px 26px; border: 1px solid rgba(232,199,126,.35); border-radius: 20px; background: #0d2823; color: var(--cream); text-align: center; }
-.wish-dialog::backdrop { background: rgba(3,12,10,.7); backdrop-filter: blur(3px); }
+.wish-dialog::backdrop { background: rgba(3,12,10,.78); }
 .wish-dialog h2 { margin: 4px 0 12px; font-weight: 500; font-size: 24px; overflow-wrap: anywhere; }
 .wish-dialog blockquote { margin: 0 0 22px; line-height: 1.8; font-size: 15px; overflow-wrap: anywhere; text-align: left; padding: 14px 16px; border-left: 3px solid var(--gold-deep); background: rgba(255,245,223,.06); border-radius: 0 10px 10px 0; }
 .wish-close { all: unset; position: absolute; top: 10px; right: 14px; cursor: pointer; font-size: 26px; line-height: 1; color: var(--muted); }
@@ -424,13 +415,14 @@ h1 span { color: var(--gold); }
     margin-top: calc((100svh - var(--h)) / 2);
     background: url('../images/backgrounds/river-night.webp') center / 100% 100% no-repeat;
 }
-.river-glint { position: absolute; left: 18%; right: 0; top: 58%; height: 30%; pointer-events: none; opacity: .5; mix-blend-mode: screen;
-    background: radial-gradient(ellipse 14px 3px at 20px 10px, rgba(255,235,170,.85), transparent 70%) 0 0 / 90px 42px, radial-gradient(ellipse 18px 3px at 60px 30px, rgba(255,235,170,.7), transparent 70%) 0 0 / 130px 56px;
-    animation: glint 9s linear infinite; }
+.river-glint { position: absolute; left: 18%; right: 0; top: 58%; height: 30%; pointer-events: none; opacity: .5; overflow: hidden; }
+.river-glint::before, .river-glint::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; right: -130px; will-change: transform; animation: glint 9s linear infinite; }
+.river-glint::before { background: radial-gradient(ellipse 14px 3px at 20px 10px, rgba(255,235,170,.85), transparent 70%) 0 0 / 90px 42px; }
+.river-glint::after { background: radial-gradient(ellipse 18px 3px at 60px 30px, rgba(255,235,170,.7), transparent 70%) 0 0 / 130px 56px; animation-name: glint-wide; }
 .river-sky { position: absolute; inset: 0 0 45% 0; overflow: hidden; pointer-events: none; }
 .sky-lantern { position: absolute; bottom: -4%; width: calc(var(--w) * .012); height: calc(var(--w) * .016); border-radius: 22%; background: linear-gradient(180deg, #ffd47a, #f0802a); box-shadow: 0 0 calc(var(--w) * .012) calc(var(--w) * .004) rgba(255,160,60,.55); opacity: 0; animation: skyUp var(--t, 18s) ease-in forwards; }
 
-.rk { all: unset; box-sizing: border-box; position: absolute; width: calc(var(--w) * .075 * var(--s, 1)); transform: translate(-50%, -78%); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.rk { all: unset; box-sizing: border-box; position: absolute; width: calc(var(--w) * .075 * var(--s, 1)); transform: translate(-50%, -78%); will-change: transform; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .rk:focus-visible .rk-tag, .rk:hover .rk-tag { opacity: 1; transform: translate(-50%, 0); }
 .rk:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 12px; }
 .rk-drift { display: block; position: relative; }
@@ -453,14 +445,15 @@ h1 span { color: var(--gold); }
 .rk-mine.is-releasing .rk-arc { animation: relY 2.2s linear both; }
 .rk-mine.is-releasing .rk-ring { opacity: 0; animation: fadeIn .1s linear 2.2s forwards; }
 
-.river-toast { position: fixed; left: 50%; bottom: 22px; z-index: 40; width: min(480px, calc(100% - 28px)); transform: translate(-50%, 30px); opacity: 0; pointer-events: none; padding: 16px 20px; text-align: center; border-radius: 18px; border: 1px solid rgba(232,199,126,.3); background: rgba(8,26,23,.88); backdrop-filter: blur(12px); display: grid; gap: 4px; transition: opacity .6s, transform .6s; }
+.river-toast { position: fixed; left: 50%; bottom: 22px; z-index: 40; width: min(480px, calc(100% - 28px)); transform: translate(-50%, 30px); opacity: 0; pointer-events: none; padding: 16px 20px; text-align: center; border-radius: 18px; border: 1px solid rgba(232,199,126,.3); background: rgba(8,26,23,.93); display: grid; gap: 4px; transition: opacity .6s, transform .6s; }
 .river-toast-show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 .river-toast strong { font-weight: 500; font-size: 17px; }
 .river-toast > span { color: var(--muted); font-size: 13px; }
 .river-toast-actions { display: flex; gap: 10px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
 .river-toast-actions .button { min-height: 42px; padding: 0 20px; width: auto; font-size: 14px; }
 
-@keyframes glint { to { background-position: 90px 0, 130px 0; } }
+@keyframes glint { from { transform: translate3d(-90px, 0, 0); } to { transform: translate3d(0, 0, 0); } }
+@keyframes glint-wide { from { transform: translate3d(-130px, 0, 0); } to { transform: translate3d(0, 0, 0); } }
 @keyframes skyUp { 0% { opacity: 0; transform: translate(0, 0); } 10% { opacity: .95; } 100% { opacity: 0; transform: translate(var(--dx, 20px), -75svh) scale(.7); } }
 @keyframes relX { from { transform: translateX(var(--fx)); } to { transform: translateX(0); } }
 @keyframes relY { 0% { transform: translateY(var(--fy)) scale(1.9) rotate(-14deg); animation-timing-function: cubic-bezier(.2,.7,.4,1); }
@@ -471,7 +464,6 @@ h1 span { color: var(--gold); }
 @keyframes fadeIn { to { opacity: 1; } }
 @media (max-width: 760px) {
     .river-page .site-header { height: 70px; padding: 0 18px; }
-    .river-page .main-nav { left: 14px; right: 14px; }
     .rk { width: calc(var(--w) * .085 * var(--s, 1)); }
     .river-toast { bottom: max(12px, env(safe-area-inset-bottom)); width: calc(100% - 24px); padding: 12px 14px; border-radius: 16px; gap: 2px; }
     .river-toast strong { font-size: 15px; }
@@ -480,7 +472,7 @@ h1 span { color: var(--gold); }
     .river-toast-actions .button { flex: 1 1 0; min-height: 40px; padding: 0 10px; font-size: 13px; gap: 6px; white-space: nowrap; }
     .wish-dialog { padding: 26px 18px 20px; }
 }
-@media (prefers-reduced-motion: reduce) { .rk-bob, .river-glint, .rk-ring::before, .rk-ring::after { animation: none; } .rk-ring { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .rk-bob, .river-glint::before, .river-glint::after, .rk-ring::before, .rk-ring::after { animation: none; } .rk-ring { opacity: 1; } }
 
 
 /* ---- เพิ่มภายหลัง: honeypot, ข้อความแจ้งความเป็นส่วนตัว, ลิงก์ท้ายเว็บ ---- */
@@ -500,3 +492,305 @@ h1 span { color: var(--gold); }
 .admin-table { width: 100%; border-collapse: collapse; font-size: .9rem; line-height: 1.5; }
 .admin-table th, .admin-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255, 255, 255, .12); text-align: left; vertical-align: top; }
 .admin-table tr.is-hidden td { opacity: .45; }
+
+/* ---- รายงานกระทงที่ไม่เหมาะสม ---- */
+.wish-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.report-link { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; font-family: inherit; font-size: 13px; color: var(--muted); border-radius: 999px; text-decoration: underline; text-decoration-color: rgba(255, 245, 223, .3); text-underline-offset: 4px; }
+.report-link:hover { color: var(--cream); text-decoration-color: currentColor; }
+.report-link:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.report-link[hidden] { display: none; }
+.report-line { margin: 10px 0 0; }
+
+.report-dialog { text-align: left; max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; }
+.report-dialog h2 { margin-bottom: 14px; }
+.report-form[hidden], .report-done[hidden], .report-msg[hidden] { display: none; }
+.report-reasons { margin: 0 0 14px; padding: 0; border: 0; display: grid; gap: 8px; min-width: 0; }
+.report-reasons legend { padding: 0; margin-bottom: 8px; font-size: 13px; color: var(--muted); }
+.report-reason { display: block; cursor: pointer; }
+.report-reason input { position: absolute; opacity: 0; pointer-events: none; }
+.report-reason span { display: flex; align-items: center; gap: 11px; min-height: 46px; padding: 9px 14px; border: 1px solid rgba(232, 199, 126, .22); border-radius: 12px; font-size: 14px; line-height: 1.45; background: rgba(255, 245, 223, .04); transition: border-color .15s, background .15s; }
+.report-reason span::before { content: ''; flex: none; width: 16px; height: 16px; border: 1px solid var(--gold); border-radius: 50%; }
+.report-reason:hover span { border-color: rgba(232, 199, 126, .5); }
+.report-reason input:checked + span { border-color: var(--gold); background: rgba(232, 199, 126, .1); }
+.report-reason input:checked + span::before { background: var(--gold); box-shadow: inset 0 0 0 3px #0d2823; }
+.report-reason input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+.report-label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--muted); }
+.report-dialog textarea { display: block; width: 100%; resize: vertical; min-height: 84px; padding: 11px 13px; border: 1px solid rgba(232, 199, 126, .3); border-radius: 12px; background: rgba(0, 0, 0, .25); color: var(--cream); font: inherit; font-size: 16px; line-height: 1.6; }
+.report-dialog textarea:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+.report-count { display: block; margin-top: 4px; text-align: right; font-size: 12px; color: var(--muted); }
+.report-msg { margin: 10px 0 0; padding: 10px 14px; border: 1px solid rgba(255, 140, 125, .4); border-radius: 10px; background: rgba(120, 35, 30, .25); color: #ffd4cc; font-size: 13px; }
+.report-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.report-actions .button { min-height: 46px; padding: 0 22px; width: auto; }
+.report-actions .button:disabled { opacity: .6; cursor: progress; transform: none; }
+.report-done { text-align: center; padding: 6px 0 0; }
+.report-done p { margin: 0 0 18px; line-height: 1.7; overflow-wrap: anywhere; }
+.report-done .success-symbol { width: 52px; height: 52px; margin-bottom: 14px; font-size: 24px; }
+@media (max-width: 560px) {
+    .report-dialog { padding: 24px 16px 18px; }
+    .report-actions { flex-direction: column-reverse; }
+    .report-actions .button { width: 100%; }
+}
+
+
+/* =====================================================================
+   Responsive overhaul — มือถือ / iPad (portrait + landscape)
+   ไล่ breakpoint: 1024 (iPad Pro / แท็บเล็ตแนวนอน) → 900 (iPad แนวตั้ง)
+   → 560 (มือถือ) → 400 (มือถือจอเล็ก) และโหมดจอเตี้ย (มือถือแนวนอน)
+   ===================================================================== */
+:root { --gutter: clamp(20px, 4.5vw, 48px); --header-h: 92px; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+a, button, label, input, select, textarea, summary { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+img, svg { max-width: 100%; }
+.create-page { min-height: 100dvh; }
+.site-footer { padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
+.footer-brand, .site-footer > span { min-width: 0; }
+
+/* พื้นหลัง fixed ไม่ให้สเกลกระตุกตอน address bar ของ iOS ยุบ/ขยาย */
+@supports (height: 100lvh) {
+    .scene, .scene-shade, .fireflies { bottom: auto; height: 100lvh; }
+}
+
+/* ---------- แท็บเล็ต / จอ ≤ 1024 ---------- */
+@media (max-width: 1024px) {
+    .create-shell { width: calc(100% - 2 * var(--gutter)); padding-top: 52px; }
+    .gallery-shell { width: calc(100% - 2 * var(--gutter)); }
+    .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, clamp(160px, 21vw, 230px)), 1fr)); }
+    /* iOS/iPadOS ซูมเองถ้า font-size ของช่องกรอกน้อยกว่า 16px */
+    .text-field, .report-dialog textarea, .admin-login input { font-size: 16px; }
+}
+
+/* ---------- iPad แนวตั้ง / มือถือ (≤ 900): เมนูแบบ dropdown ---------- */
+@media (max-width: 900px) {
+    :root { --header-h: 76px; --gutter: 24px; }
+    .site-header { height: var(--header-h); width: calc(100% - 2 * var(--gutter)); }
+    .brand { font-size: 19px; }
+    .brand-mark { width: 28px; height: 28px; }
+    .menu-toggle { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 46px; height: 46px; margin-right: -9px; border: 0; border-radius: 12px; background: transparent; padding: 0; cursor: pointer; }
+    .menu-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+    .menu-toggle span { display: block; width: 24px; height: 2px; border-radius: 2px; background: var(--cream); }
+    .main-nav { display: none; position: absolute; z-index: 5; top: calc(100% + 8px); right: 0; width: min(340px, 100%); padding: 10px 20px; flex-direction: column; align-items: stretch; gap: 0; font-size: 16px; background: rgba(12, 33, 29, .97); border: 1px solid rgba(232, 199, 126, .3); border-radius: 18px; box-shadow: 0 18px 50px rgba(0, 0, 0, .4); }
+    .main-nav.open { display: flex; }
+    .main-nav .nav-link { padding: 15px 2px; border-bottom: 1px solid rgba(255, 245, 223, .1); }
+    .main-nav .nav-link:last-of-type { border-bottom: 0; }
+    .main-nav .nav-cta { margin: 8px 0; padding: 14px 19px; text-align: center; }
+    .nav-link.active { color: var(--gold); }
+
+    /* ฉาก/พื้นหลังแนวตั้ง: เลื่อนจุดโฟกัสไปที่วัด+แม่น้ำ แล้วเพิ่มความเข้มให้อ่านข้อความง่าย */
+    .scene { background-position: 60% center; }
+    .scene-shade { background: linear-gradient(90deg, rgba(7, 27, 23, .78), rgba(9, 30, 26, .42)), linear-gradient(180deg, rgba(8, 27, 24, .2), rgba(8, 25, 22, .5)); }
+
+    /* หน้าแรก */
+    .hero { width: calc(100% - 2 * var(--gutter)); min-height: min(820px, calc(84svh - var(--header-h))); padding: 56px 0 96px; }
+    .hero-content { max-width: 600px; }
+    h1 { font-size: clamp(52px, 10.5vw, 88px); }
+    .hero-description { font-size: clamp(16px, 2.4vw, 19px); }
+    .mobile-break { display: initial; }
+    .intro { padding: 80px var(--gutter) 88px; }
+    .intro-copy { font-size: 15px; }
+
+    /* ฟอร์มสร้างกระทง: เหลือคอลัมน์เดียว + พรีวิวเป็นแถบกะทัดรัดด้านบน */
+    .create-layout, .wizard-layout { grid-template-columns: minmax(0, 1fr); }
+    .wizard-preview, .preview-panel { position: static; grid-row: 1; }
+    .wizard-preview { display: grid; grid-template-columns: minmax(120px, 190px) minmax(0, 1fr); grid-template-areas: "art kick" "art title" "art kname" "art nick" "art prayer"; align-content: center; column-gap: 24px; padding: 20px 26px; text-align: left; }
+    .wizard-preview .krathong-preview { grid-area: art; align-self: center; width: 100%; max-width: none; height: auto; margin: 0; }
+    .wizard-preview .section-kicker { grid-area: kick; margin: 0 0 2px; }
+    .wizard-preview h2 { grid-area: title; font-size: 19px; }
+    .wizard-preview .preview-krathong-name { grid-area: kname; margin: 8px 0 2px; }
+    .wizard-preview .preview-nickname { grid-area: nick; margin: 0 0 4px; }
+    .wizard-preview .preview-prayer { grid-area: prayer; margin: 0; max-width: none; min-height: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+    .wizard-preview .preview-note { display: none; }
+
+    /* ปุ่มเดิน/ย้อนกลับ ติดขอบล่างของแผงฟอร์ม เลื่อนยาว ๆ ก็ยังกดได้ */
+    .form-panel { --pad-x: 26px; --pad-y: 26px; padding: var(--pad-y) var(--pad-x); }
+    .wizard-actions { position: sticky; bottom: 0; z-index: 5; margin: 26px calc(var(--pad-x) * -1) calc(var(--pad-y) * -1); padding: 14px var(--pad-x) calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255, 245, 223, .12); border-radius: 0 0 22px 22px; background: rgba(9, 29, 25, .96); }
+    .wizard-actions .button { min-height: 50px; }
+
+    /* ตัวเลือกกระทง/ชุดดอกไม้ 3 คอลัมน์บนแท็บเล็ต */
+    .krathong-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .catalog-name { font-size: 14px; }
+    .catalog-description { font-size: 11.5px; }
+    .set-flowers { font-size: 12px; }
+    .prayer-tabs span { padding: 11px 18px; font-size: 13px; }
+    .prayer-option { padding: 14px 15px; font-size: 13.5px; }
+    .wizard-steps span { font-size: 11px; }
+
+    /* หน้ารายละเอียด / ป๊อปอัป */
+    .view-panel { max-width: 720px; padding: 40px 32px; }
+    .release { width: min(100%, 640px); height: 380px; }
+    .wish-dialog { max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; }
+    .wish-close { width: 44px; height: 44px; display: grid; place-items: center; top: 8px; right: 8px; font-size: 28px; }
+
+    /* หน้าแม่น้ำ */
+    .river-page .site-header { height: calc(var(--header-h) - 6px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) max(var(--gutter), env(safe-area-inset-right)) 0 max(var(--gutter), env(safe-area-inset-left)); }
+    .river-page .main-nav { right: max(var(--gutter), env(safe-area-inset-right)); }
+    .rk { width: calc(var(--w) * .085 * var(--s, 1)); }
+    .river-toast { bottom: max(16px, env(safe-area-inset-bottom)); }
+}
+
+/* ---------- แท็บเล็ตแนวตั้งโดยเฉพาะ (561–900) ---------- */
+@media (min-width: 561px) and (max-width: 900px) {
+    .hero-actions .button { min-width: 220px; }
+    .create-heading h1 { font-size: clamp(40px, 6.4vw, 54px); }
+    .flower-set-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---------- มือถือ (≤ 560) ---------- */
+@media (max-width: 560px) {
+    :root { --gutter: 18px; --header-h: 70px; }
+    .brand { font-size: 17px; gap: 9px; }
+    .brand-mark { width: 26px; height: 26px; }
+    .hero { min-height: calc(86svh - var(--header-h)); padding: 44px 0 88px; }
+    .eyebrow { font-size: 10px; letter-spacing: .15em; }
+    h1 { font-size: clamp(46px, 13.5vw, 64px); }
+    .hero-description { margin: 20px 0 26px; font-size: 15.5px; line-height: 1.85; }
+    .hero-actions { max-width: none; }
+    .hero-note { font-size: 12.5px; }
+    .intro { padding: 68px 22px 76px; }
+    .intro-copy { font-size: 14px; line-height: 1.95; }
+    .text-link { display: inline-block; padding: 6px 0 8px; }
+    .site-footer { font-size: 12px; padding-left: 20px; padding-right: 20px; }
+
+    .create-shell, .gallery-shell { width: calc(100% - 2 * var(--gutter)); padding: 34px 0 54px; }
+    .create-heading h1 { font-size: 36px; }
+    .create-heading h1 span { margin-left: 6px; }
+    .create-heading > p:last-child { font-size: 13.5px; }
+    .form-panel { --pad-x: 16px; --pad-y: 20px; border-radius: 18px; }
+    .wizard-actions { border-radius: 0 0 18px 18px; margin-top: 22px; gap: 9px; }
+    .wizard-actions .button { min-width: 0; }
+    .wizard-actions #nextStep, .wizard-actions #submitKrathong { flex: 1 1 auto; }
+    .step-heading { gap: 12px; margin-bottom: 18px; }
+    .step-heading h2 { font-size: 18px; }
+    .wizard-step .step-heading { margin-bottom: 20px; }
+    .wizard-progress { margin-bottom: 24px; }
+    .wizard-steps span { font-size: 10.5px; }
+
+    /* พรีวิวกะทัดรัด: รูปซ้าย ข้อความขวา */
+    .wizard-preview { grid-template-columns: 112px minmax(0, 1fr); column-gap: 16px; padding: 14px 16px; border-radius: 18px; }
+    .wizard-preview .section-kicker, .wizard-preview h2 { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .wizard-preview .preview-krathong-name { margin: 0 0 2px; font-size: 12px; }
+    .wizard-preview .preview-nickname { font-size: 17px; }
+    .wizard-preview .preview-prayer { font-size: 12.5px; line-height: 1.65; }
+
+    /* ชุดดอกไม้: การ์ดแนวนอน ภาพซ้าย-ข้อความขวา อ่านง่ายกว่า 2 คอลัมน์แคบ ๆ */
+    .flower-set-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .flower-set-option { display: grid; grid-template-columns: minmax(0, 44%) minmax(0, 1fr); grid-template-areas: "vis name" "vis flw" "vis desc"; align-items: center; justify-items: start; text-align: left; column-gap: 12px; row-gap: 2px; padding: 10px 36px 10px 10px; }
+    .flower-set-option .set-visual { grid-area: vis; }
+    .flower-set-option .catalog-name { grid-area: name; }
+    .flower-set-option .set-flowers { grid-area: flw; }
+    .flower-set-option .catalog-description { grid-area: desc; font-size: 11.5px; }
+    .catalog-selected { top: 10px; right: 10px; }
+    .krathong-grid:not(.flower-set-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .catalog-description { font-size: 11px; }
+
+    .review-row { font-size: 13px; }
+    .review-prayer { font-size: 13px; }
+    .wizard-hint, .char-count { font-size: 12px; }
+    .field-label span { font-size: 12px; }
+
+    .view-panel { padding: 30px 16px; }
+    .release { height: 280px; }
+    .gallery-pager .button { padding: 0 16px; }
+    .river-toast > span { font-size: 12.5px; }
+}
+
+/* ---------- มือถือจอเล็กมาก (≤ 380) ---------- */
+@media (max-width: 380px) {
+    .brand { font-size: 16px; }
+    .wizard-preview { grid-template-columns: 92px minmax(0, 1fr); column-gap: 12px; }
+    .flower-set-option { grid-template-columns: minmax(0, 40%) minmax(0, 1fr); }
+    .wizard-steps span { font-size: 10px; }
+    .wizard-actions .button { padding-left: 14px; padding-right: 14px; font-size: 13.5px; }
+}
+
+/* ---------- จอเตี้ย (มือถือแนวนอน): ย่อทุกอย่างให้พอดีจอ ---------- */
+@media (max-height: 520px) and (orientation: landscape) {
+    :root { --header-h: 60px; }
+    .site-header { height: var(--header-h); }
+    .hero { min-height: 0; padding: 26px 0 36px; }
+    .eyebrow { margin-bottom: 12px; }
+    h1 { font-size: clamp(34px, 11vh, 54px); line-height: 1.12; }
+    .hero-description { margin: 12px 0 18px; font-size: 14px; line-height: 1.7; }
+    .hero-actions { flex-direction: row; flex-wrap: wrap; max-width: none; gap: 10px; }
+    .hero-actions .button { width: auto; min-height: 44px; padding: 0 20px; }
+    .hero-note, .scroll-hint { display: none; }
+    .intro { padding: 44px var(--gutter) 48px; }
+    .create-shell { padding: 22px 0 40px; }
+    .create-heading { margin-bottom: 20px; }
+    .create-heading h1 { font-size: 32px; }
+    .wizard-actions { position: static; margin: 22px 0 0; padding: 16px 0 0; background: none; border-radius: 0; }
+    .form-panel { padding: 20px; }
+    .view-panel { padding: 22px 20px; }
+    .release { height: 220px; }
+    .wish-dialog { padding: 20px 18px 16px; }
+
+    /* แม่น้ำ: toast กะทัดรัด ไม่บังผืนน้ำ */
+    .river-page .site-header { height: calc(56px + env(safe-area-inset-top)); }
+    .river-toast { width: min(600px, calc(100% - 28px)); grid-template-columns: minmax(0, 1fr) auto; align-items: center; text-align: left; column-gap: 16px; padding: 10px 14px; bottom: max(10px, env(safe-area-inset-bottom)); }
+    .river-toast strong { grid-column: 1; font-size: 14px; }
+    .river-toast > span { grid-column: 1; font-size: 11.5px; line-height: 1.4; }
+    .river-toast-actions { grid-column: 2; grid-row: 1 / span 2; margin: 0; flex-wrap: nowrap; }
+    .river-toast-actions .button { flex: none; min-height: 38px; padding: 0 14px; font-size: 13px; }
+    .river-toast-actions .button-ghost { display: none; }
+}
+
+/* ---------- หน้าแม่น้ำบนมือถือ/ไอแพด: ล็อกจอ ไม่ให้เลื่อน (กระทงทุกใบอยู่ในจอ) ---------- */
+.river-view.is-locked { overflow: hidden; touch-action: manipulation; overscroll-behavior: none; }
+.river-view.is-locked .rk { width: calc(var(--w) * .06 * var(--s, 1)); }
+
+/* ---------- ฟองคำอธิษฐานเหนือกระทง (แสดงตอนเอาเมาส์ชี้) + ชื่ออยู่ด้านล่าง ---------- */
+.rk-wish { position: absolute; left: 50%; bottom: calc(100% + 4px); z-index: 2; width: max-content; max-width: 210px; padding: 8px 12px; border-radius: 12px; font-size: 12.5px; font-weight: 300; line-height: 1.55; text-align: left; color: var(--cream); background: rgba(6, 22, 20, .9); border: 1px solid rgba(232, 199, 126, .4); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; opacity: 0; transform: translate(calc(-50% + var(--shift, 0px)), 4px); transition: opacity .2s, transform .2s; pointer-events: none; }
+.rk:hover, .rk:focus-visible { z-index: 900 !important; }
+@media (hover: hover) {
+    .rk:hover .rk-wish, .rk:focus-visible .rk-wish { opacity: 1; transform: translate(calc(-50% + var(--shift, 0px)), 0); }
+}
+
+/* ---------- ระบบเสียง (assets/js/audio.js) ---------- */
+.kt-audio { position: fixed; right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom)); z-index: 60; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; font-family: 'Kanit', sans-serif; }
+.kt-audio-bar { display: flex; gap: 8px; padding: 5px; border-radius: 999px; border: 1px solid rgba(232, 199, 126, .35); background: rgba(8, 26, 23, .92); box-shadow: 0 8px 26px rgba(0, 0, 0, .35); }
+.kt-audio-btn { position: relative; display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border: 0; border-radius: 50%; color: var(--gold); background: transparent; cursor: pointer; transition: background .2s, color .2s, transform .15s; }
+.kt-audio-btn svg { width: 22px; height: 22px; }
+.kt-audio-btn:hover { background: rgba(232, 199, 126, .14); }
+.kt-audio-btn:active { transform: scale(.94); }
+.kt-audio-btn:focus-visible, .kt-audio-row input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.kt-audio-toggle { color: rgba(255, 245, 223, .65); }
+.kt-audio.is-on .kt-audio-toggle { color: #183b2e; background: var(--gold); }
+.kt-audio.is-on .kt-audio-toggle:hover { background: #f1d594; }
+.kt-audio.is-playing .kt-audio-toggle::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid rgba(232, 199, 126, .55); animation: kt-audio-pulse 2.4s ease-out infinite; }
+.kt-audio.is-waiting .kt-audio-toggle { animation: kt-audio-wait 1.6s ease-in-out infinite; }
+@keyframes kt-audio-pulse { from { transform: scale(.9); opacity: .9; } to { transform: scale(1.35); opacity: 0; } }
+@keyframes kt-audio-wait { 50% { opacity: .55; } }
+
+.kt-audio-panel { width: min(260px, calc(100vw - 28px)); padding: 14px 16px 10px; border-radius: 18px; border: 1px solid rgba(232, 199, 126, .3); background: rgba(8, 26, 23, .94); box-shadow: 0 16px 44px rgba(0, 0, 0, .45); }
+.kt-audio-panel[hidden], .kt-audio-hint[hidden] { display: none; }
+.kt-audio-title { margin: 0 0 8px; font-size: 13px; font-weight: 500; letter-spacing: .04em; color: var(--gold); }
+.kt-audio-row { display: grid; grid-template-columns: 78px 1fr; align-items: center; gap: 10px; min-height: 40px; font-size: 14px; color: var(--cream); }
+.kt-audio-row input { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; margin: 0; background: transparent; cursor: pointer; --fill: 50%; }
+.kt-audio-row input::-webkit-slider-runnable-track { height: 4px; border-radius: 4px; background: linear-gradient(90deg, var(--gold) var(--fill), rgba(255, 245, 223, .22) var(--fill)); }
+.kt-audio-row input::-moz-range-track { height: 4px; border-radius: 4px; background: rgba(255, 245, 223, .22); }
+.kt-audio-row input::-moz-range-progress { height: 4px; border-radius: 4px; background: var(--gold); }
+.kt-audio-row input::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7px; border-radius: 50%; border: 2px solid #183b2e; background: var(--gold); box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
+.kt-audio-row input::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #183b2e; background: var(--gold); }
+
+.kt-audio-hint { position: absolute; right: 0; bottom: calc(100% + 10px); white-space: nowrap; padding: 8px 14px; border-radius: 999px; font-size: 13px; color: #183b2e; background: var(--gold); box-shadow: 0 8px 24px rgba(0, 0, 0, .35); animation: kt-audio-wait 2s ease-in-out infinite; }
+.kt-audio-hint::after { content: ''; position: absolute; right: 18px; top: 100%; border: 6px solid transparent; border-top-color: var(--gold); }
+
+/* หน้าแม่น้ำ: ด้านล่างมีกล่องข้อความ จึงย้ายปุ่มเสียงไปมุมขวาบนใต้เมนู */
+.river-page .kt-audio { bottom: auto; top: 92px; }
+.river-page .kt-audio-hint { bottom: auto; top: calc(100% + 10px); }
+.river-page .kt-audio-hint::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--gold); }
+.river-page .kt-audio { flex-direction: column-reverse; }
+
+/* หน้าสร้างกระทงบนมือถือ: เว้นเหนือแถบปุ่มย้อนกลับ/ถัดไปที่ติดล่างจอ */
+@media (max-width: 900px) {
+    .create-page .kt-audio { bottom: calc(86px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .kt-audio.is-playing .kt-audio-toggle::after, .kt-audio.is-waiting .kt-audio-toggle, .kt-audio-hint { animation: none; }
+}
+
+/* ประสิทธิภาพ: เปลวเทียนของกระทงคนอื่นอยู่นิ่ง (อนิเมชันภายใน SVG วาดใหม่ทุกเฟรม) เคลื่อนไหวเฉพาะกระทงของเรา/ตอนชี้ */
+.rk:not(.rk-mine):not(:hover):not(:focus-visible) .flame-outer,
+.rk:not(.rk-mine):not(:hover):not(:focus-visible) .flame-inner,
+.rk:not(.rk-mine):not(:hover):not(:focus-visible) .flame-glow { animation: none; }
+.firefly { will-change: transform, opacity; }

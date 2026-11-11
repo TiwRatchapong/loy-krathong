@@ -4,12 +4,14 @@
     const name = document.getElementById('wishName');
     const text = document.getElementById('wishText');
     const link = document.getElementById('wishLink');
+    const reportBtn = document.getElementById('wishReport');
 
     document.querySelectorAll('.gallery-item').forEach(item => {
         item.addEventListener('click', () => {
             name.textContent = item.dataset.name;
             text.textContent = item.dataset.prayer;   // textContent: ไม่ตีความ HTML
             link.href = `view.php?id=${encodeURIComponent(item.dataset.id)}`;
+            if (reportBtn) reportBtn.dataset.id = item.dataset.id;
             dialog.showModal();
         });
     });

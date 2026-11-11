@@ -271,6 +271,7 @@ function renderPageTop(string $title, string $bodyClass = 'create-page', string 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="../assets/images/backgrounds/river-night.webp" type="image/webp">
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="<?= e($bodyClass) ?>">
@@ -280,12 +281,16 @@ function renderPageTop(string $title, string $bodyClass = 'create-page', string 
 <?php
 }
 
-function renderPageBottom(string $script = ''): void
+/** @param string|string[] $scripts ชื่อไฟล์ใน assets/js (ใส่เป็น array ได้หลายไฟล์) */
+function renderPageBottom(string|array $scripts = ''): void
 {
+    $scripts = array_values(array_filter((array) $scripts, static fn ($s) => $s !== ''));
     ?>
     <footer class="site-footer"><span class="footer-brand"><?= svgLotusIcon() ?> ลอยกระทงออนไลน์</span><span>ขอให้ค่ำคืนนี้เต็มไปด้วยความสุข · <a class="footer-link" href="privacy.php">ความเป็นส่วนตัว</a></span></footer>
     <script src="../assets/js/script.js"></script>
-    <?php if ($script !== ''): ?><script src="../assets/js/<?= e($script) ?>"></script><?php endif; ?>
+    <script src="../assets/js/audio.js"></script>
+    <?php foreach ($scripts as $script): ?><script src="../assets/js/<?= e((string) $script) ?>"></script>
+    <?php endforeach; ?>
 </body>
 </html>
 <?php

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // เพิ่มเลขนี้ทุกครั้งที่แก้ schema.sql / seed.sql หรือโครงสร้างตาราง เพื่อให้ฐานข้อมูลเดิมถูกอัปเกรดอีกหนึ่งครั้ง
-const DB_SCHEMA_VERSION = 2;
+const DB_SCHEMA_VERSION = 4;
 
 function getDatabase(): PDO
 {
@@ -117,6 +117,32 @@ function migrateDatabase(PDO $pdo, string $databaseDirectory): void
         created_at INTEGER NOT NULL
     )');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_rate_events_lookup ON rate_events(bucket, ip_hash, created_at)');
+
+    // บันทึกกิจกรรมของผู้ดูแล (เข้าสู่ระบบ, ซ่อน/แสดง/ลบกระทง ฯลฯ)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS admin_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        action TEXT NOT NULL,
+        target TEXT NOT NULL DEFAULT '',
+        detail TEXT NOT NULL DEFAULT '',
+        ip_hash TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    // รายงานกระทงที่ไม่เหมาะสมจากผู้เข้าชม (ดู includes/reports.php) เก็บเฉพาะ hash ของ IP
+    // status: open = รอตรวจสอบ, actioned = ผู้ดูแลซ่อนกระทงแล้ว, dismissed = ผู้ดูแลปัดตก
+    $pdo->exec("CREATE TABLE IF NOT EXISTS krathong_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        krathong_id INTEGER NOT NULL,
+        reason TEXT NOT NULL,
+        detail TEXT NOT NULL DEFAULT '',
+        ip_hash TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'actioned', 'dismissed')),
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        handled_at TEXT,
+        FOREIGN KEY (krathong_id) REFERENCES krathongs(id) ON DELETE CASCADE
+    )");
+    $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_reports_once ON krathong_reports(krathong_id, ip_hash)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_reports_status ON krathong_reports(status, krathong_id)');
 
     // Seed data that depends on the columns above (SVG keys, flower sets). Safe to run repeatedly.
     $seedPath = $databaseDirectory . '/seed.sql';

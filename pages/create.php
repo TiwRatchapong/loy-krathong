@@ -121,6 +121,7 @@ if (empty($_SESSION['csrf_token'])) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="../assets/images/backgrounds/river-night.webp" type="image/webp">
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="create-page">
@@ -158,7 +159,7 @@ if (empty($_SESSION['csrf_token'])) {
                     <section class="wizard-step active" data-step="0">
                         <div class="step-heading"><span>01</span><div><h2>ก่อนอื่น ขอทราบชื่อคุณ</h2><p>ชื่อเล่นที่จะแสดงในกระทงของคุณ</p></div></div>
                         <label class="field-label" for="nickname">ชื่อเล่น <span>ไม่เกิน 30 ตัวอักษร</span></label>
-                        <input class="text-field" id="nickname" name="nickname" type="text" maxlength="30" placeholder="เช่น ทิว" value="<?= e($nickname) ?>" autocomplete="nickname" required>
+                        <input class="text-field" id="nickname" name="nickname" type="text" maxlength="30" placeholder="เขียนชื่อของคุณ.." value="<?= e($nickname) ?>" autocomplete="nickname" required>
                         <p class="field-error" id="nicknameError" role="alert" hidden></p>
                         <p class="wizard-hint">ไม่จำเป็นต้องใช้ชื่อจริงก็ได้นะ</p>
                     </section>
@@ -253,6 +254,7 @@ if (empty($_SESSION['csrf_token'])) {
     </main>
     <footer class="site-footer"><span class="footer-brand"><?= svgLotusIcon() ?> ลอยกระทงออนไลน์</span><span>ขอให้ค่ำคืนนี้เต็มไปด้วยความสุข</span></footer>
     <script src="../assets/js/script.js"></script>
+    <script src="../assets/js/audio.js"></script>
     <script src="../assets/js/create.js"></script>
 </body>
 </html>
