@@ -3,21 +3,35 @@
     const world = document.getElementById('riverWorld');
     const sky = document.getElementById('riverSky');
     const toast = document.getElementById('riverToast');
+    const hud = document.getElementById('riverHud');
+    const stars = document.getElementById('riverStars');
+    const orbs = document.getElementById('riverOrbs');
     const dialog = document.getElementById('wishDialog');
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // คำเปิดหน้า: เริ่มเล่นหลังฟอนต์พร้อม (สูงสุดรอ 1.5 วินาที) จะได้ไม่ขยับตอนฟอนต์สลับ
+    const intro = document.querySelector('.moon-intro');
+    if (intro) {
+        const go = () => requestAnimationFrame(() => intro.classList.add('is-ready'));
+        if (document.fonts && document.fonts.ready) Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]).then(go);
+        else go();
+    }
     const rand = (a, b) => a + Math.random() * (b - a);
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const MINE_SCALE = 1;                                       // กระทงของเราใหญ่กว่าของคนอื่น เห็นชัด
+    const MOON = [69.4, 14.4, 5];                                 // ดวงจันทร์ในภาพ: x, y (% ภาพ) และรัศมี (% ความกว้างภาพ)
 
     // ---- พารามิเตอร์แม่น้ำ (ส่งมาจาก PHP: includes/functions.php ให้ตรงกันทั้งสองฝั่ง) ----
     const RATIO = parseFloat(world.dataset.ratio) || 0.5628;     // สูง/กว้างของภาพ
-    const Y_FAR = parseFloat(world.dataset.yFar) || 55;
-    const Y_NEAR = parseFloat(world.dataset.yNear) || 85;
-    const S_FAR = parseFloat(world.dataset.sFar) || 0.3;
-    const S_NEAR = parseFloat(world.dataset.sNear) || 1.25;
+    const Y_FAR = parseFloat(world.dataset.yFar) || 60;
+    const Y_NEAR = parseFloat(world.dataset.yNear) || 94;
+    const S_FAR = parseFloat(world.dataset.sFar) || 0.42;
+    const S_NEAR = parseFloat(world.dataset.sNear) || 1.35;
     let polyPct = [];
     try { polyPct = JSON.parse(world.dataset.poly || '[]'); } catch (e) { polyPct = []; }
     // คำนวณในหน่วย "% ของความกว้างภาพ" ทั้งแกน x และ y เพื่อให้ระยะทางเท่ากันทุกทิศ
     const poly = polyPct.map(([x, y]) => [x, y * RATIO]);
+    const PX0 = polyPct.length ? Math.min(...polyPct.map(p => p[0])) : 5, PX1 = polyPct.length ? Math.max(...polyPct.map(p => p[0])) : 98;
 
     function inside(u, v) {
         let c = false;
@@ -42,12 +56,13 @@
     const allowed = (u, v) => inside(u, v) && inBounds(u, v);
 
     // ---- กดดูคำอธิษฐาน ----
+    let bindWish = () => {};
     if (dialog && typeof dialog.showModal === 'function') {
         const name = document.getElementById('wishName');
         const text = document.getElementById('wishText');
         const link = document.getElementById('wishLink');
         const reportBtn = document.getElementById('wishReport');
-        world.querySelectorAll('.rk').forEach(item => {
+        bindWish = item => {
             item.addEventListener('click', () => {
                 name.textContent = item.dataset.name;
                 text.textContent = item.dataset.prayer;   // textContent: ไม่ตีความ HTML
@@ -57,9 +72,12 @@
                     reportBtn.hidden = item.classList.contains('rk-mine');   // ไม่ต้องรายงานกระทงของตัวเอง
                 }
                 dialog.showModal();
+                setPaused();
             });
-        });
+        };
+        world.querySelectorAll('.rk').forEach(bindWish);
         dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
+        dialog.addEventListener('close', () => setPaused());
     }
 
     // ---- กระทงลอยอยู่ในขอบเขตแม่น้ำ และเปลี่ยนขนาดตามความไกล-ใกล้ ----
@@ -67,7 +85,7 @@
     // เพราะ transform ไม่ทำให้เบราว์เซอร์คำนวณเลย์เอาต์ใหม่ (เดิมแก้ left/top ทุกเฟรม × 40 ใบ จึงกระตุก)
     let worldW = world.offsetWidth;
     const SCALE_STEP = 0.02;                          // ขนาดเปลี่ยนเป็นขั้น ๆ (เปลี่ยนความกว้างต้องคำนวณเลย์เอาต์ จึงทำเท่าที่เห็นความต่าง)
-    const boats = [...world.querySelectorAll('.rk')].map(el => {
+    const makeBoat = el => {
         const x = parseFloat(el.dataset.x), y = parseFloat(el.dataset.y);
         return {
             el, isMine: el.classList.contains('rk-mine'),
@@ -77,7 +95,13 @@
             wobble: rand(0, 6.28), wobbleRate: rand(0.15, 0.4),
             lastS: -1, lastZ: -1, startAt: 0,
         };
-    });
+    };
+    // เครื่องอ่อน (มือถือ/แรมน้อย/คอร์น้อย): ลดจำนวนกระทงที่ขยับพร้อมกัน เพื่อไม่ให้กระตุก
+    const lowPower = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 760 || (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4
+        || !!(navigator.connection && navigator.connection.saveData);
+    let MAX_BOATS = lowPower ? 16 : 30;
+    [...world.querySelectorAll('.rk:not(.rk-mine)')].slice(lowPower ? 14 : 30).forEach(el => el.remove());   // ลำที่เก่ากว่าอยู่ท้ายสุด (เรียงใหม่→เก่า)
+    const boats = [...world.querySelectorAll('.rk')].map(makeBoat);
     boats.forEach(b => { b.target = b.heading; });
 
     // หาตำแหน่งใหม่ในน้ำที่อยู่ในกรอบจอ ห่างจากลำอื่นมากที่สุด
@@ -87,7 +111,7 @@
             const u = rand(lo, hi), v = rand(Y_FAR, yMax) * RATIO;
             if (!allowed(u, v)) continue;
             let gap = 99;
-            boats.forEach(o => { if (o !== b && allowed(o.u, o.v)) gap = Math.min(gap, Math.hypot(o.u - u, o.v - v)); });
+            boats.forEach(o => { if (o !== b && allowed(o.u, o.v)) gap = Math.min(gap, Math.hypot(o.u - u, (o.v - v) * 2.4)); });
             if (gap > bestGap) { bestGap = gap; best = [u, v]; }
             if (gap >= 7) break;
         }
@@ -97,16 +121,18 @@
     function layout() {
         locked = lockQuery.matches;
         view.classList.toggle('is-locked', locked);
+        const hdr = document.querySelector('.site-header');
+        if (hud && hdr) hud.style.top = `${Math.round(hdr.getBoundingClientRect().bottom) + 4}px`;   // ชิปสถิติอยู่ใต้เมนูเสมอ
         worldW = world.offsetWidth;
         const W = worldW, H = world.offsetHeight;
-        const focus = mine ? parseFloat(mine.dataset.x) / 100 : 0.56;
+        const focus = mine ? parseFloat(mine.dataset.x) / 100 : 0.6;   // ไม่มีกระทงของเรา: โฟกัสแสงจันทร์สะท้อนน้ำ
         view.scrollLeft = clamp(focus * W - view.clientWidth / 2, 0, Math.max(0, W - view.clientWidth));
         if (!locked) { lo = 0; hi = 100; yMax = 100; return; }
         const padX = Math.min(70, view.clientWidth * 0.12);
         lo = (view.scrollLeft + padX) / W * 100;
         hi = (view.scrollLeft + view.clientWidth - padX) / W * 100;
         let bottomPx = view.clientHeight - 40;
-        if (toast) bottomPx = Math.min(bottomPx, view.clientHeight - toast.offsetHeight - 70);   // เหนือกล่องข้อความด้านล่าง
+        if (toast) bottomPx = Math.min(bottomPx, view.clientHeight - toast.offsetHeight - 44);   // เหนือแถบปุ่มด้านล่าง
         const worldTop = world.getBoundingClientRect().top;
         yMax = Math.max(Y_FAR + 8, (bottomPx - worldTop) / H * 100);
         boats.forEach(b => {
@@ -116,11 +142,22 @@
         });
     }
     layout();
-    window.addEventListener('resize', layout);
+    let layoutQueued = false;   // resize ยิงถี่มาก (โดยเฉพาะมือถือที่แถบ URL ยืด/หด) → รวมเป็นครั้งเดียวต่อเฟรม
+    window.addEventListener('resize', () => {
+        if (layoutQueued) return;
+        layoutQueued = true;
+        requestAnimationFrame(() => { layoutQueued = false; layout(); });
+    });
     if (lockQuery.addEventListener) lockQuery.addEventListener('change', layout);
+    // ฉากกว้างกว่าจอ: เริ่มที่ขอบซ้าย แล้ว layout() เลื่อนมากลาง → ซ่อนฉากไว้ (opacity 0 ใน CSS) จนเลื่อนเสร็จจึงค่อยแสดง กันภาพแว๊บที่ขอบซ้าย
+    // เรียก layout() ซ้ำตอน load/pageshow เพราะเบราว์เซอร์มือถืออาจคืนตำแหน่งเลื่อนเดิมหลังโหลดตอนรีเฟรช
+    const reveal = () => requestAnimationFrame(() => view.classList.add('is-ready'));
+    reveal();
+    window.addEventListener('load', () => { layout(); reveal(); }, { once: true });
+    window.addEventListener('pageshow', e => { if (e.persisted) layout(); });
 
     // ฟองคำอธิษฐานเหนือกระทง: ดันกลับเข้ากรอบจอถ้าชิดขอบ
-    world.querySelectorAll('.rk').forEach(el => {
+    const bindFit = el => {
         const w = el.querySelector('.rk-wish');
         if (!w) return;
         const fit = () => {
@@ -130,7 +167,9 @@
             w.style.setProperty('--shift', `${s}px`);
         };
         ['pointerenter', 'pointermove', 'focus'].forEach(ev => el.addEventListener(ev, fit));
-    });
+        if (el.classList.contains('rk-mine')) { fit(); window.addEventListener('resize', fit); setTimeout(fit, 2600); }   // ฟองคำอธิษฐานของเราแสดงตลอด: ดันกลับเข้ากรอบจอเสมอ
+    };
+    world.querySelectorAll('.rk').forEach(bindFit);
 
     function angleDiff(a, b) { return Math.atan2(Math.sin(a - b), Math.cos(a - b)); }
 
@@ -138,11 +177,69 @@
         const yPct = b.v / RATIO;
         const k = worldW / 100;                         // 1% ของความกว้างภาพ เป็นพิกเซล (u และ v วัดเป็น % ความกว้างทั้งคู่)
         b.el.style.transform = `translate3d(${((b.u - b.u0) * k).toFixed(2)}px, ${((b.v - b.v0) * k).toFixed(2)}px, 0) translate(-50%, -78%)`;
-        const s = scaleAt(yPct) * (b.isMine ? 1.2 : 1);
+        const s = scaleAt(yPct) * (b.isMine ? MINE_SCALE : 1);
+        b.s = s;
         if (Math.abs(s - b.lastS) > SCALE_STEP) { b.el.style.setProperty('--s', s.toFixed(3)); b.lastS = s; }
         if (!b.isMine) {
             const z = Math.round(yPct * 4);
             if (z !== b.lastZ) { b.el.style.zIndex = String(z); b.lastZ = z; }
+        }
+    }
+
+
+    // ---- กระทงไม่ทับกัน: แต่ละลำมีพื้นที่วงรี (กว้างตามขนาดกระทง) ถ้าใกล้กันเกินไปจะเบี่ยงหลบและถูกดันออกจากกัน ----
+    const FOOT_X = 3.6, FOOT_Y = 1.5;                  // ครึ่งความกว้าง/ลึกของตัวกระทง (หน่วย % ความกว้างภาพ ที่ขนาด 1)
+    const MINE_HALO = 1.4;                             // รอบกระทงของเราเว้นที่ว่างเพิ่ม ให้เห็นชัด
+    let FPX = 0, FPY = 0;                              // ผลลัพธ์ของ footprint — ใช้ตัวแปรร่วมแทนการสร้างอาร์เรย์ใหม่ทุกคู่/ทุกเฟรม (ลด GC กระตุก)
+    const footprint = (a, o) => {
+        const k = (a.isMine || o.isMine) ? MINE_HALO : 1;
+        const sa = a.s || 1, so = o.s || 1;
+        FPX = (FOOT_X * sa + FOOT_X * so) * k;
+        FPY = (FOOT_Y * sa + FOOT_Y * so) * k;
+    };
+    function avoid(b, dt) {
+        let ax = 0, ay = 0;
+        for (const o of boats) {
+            if (o === b) continue;
+            footprint(b, o);
+            const dx = b.u - o.u, dy = b.v - o.v;
+            if (Math.abs(dx) > FPX * 2.2 || Math.abs(dy) > FPY * 2.2) continue;   // ไกลเกินไป ไม่ต้องคำนวณ
+            const nx = dx / FPX, ny = dy / FPY, d = Math.sqrt(nx * nx + ny * ny);
+            if (d < 2.2 && d > 1e-6) { const w = (2.2 - d) / d; ax += nx * w; ay += ny * w; }
+        }
+        const mag = Math.sqrt(ax * ax + ay * ay);
+        if (mag > 0.02) b.target += angleDiff(Math.atan2(ay, ax), b.target) * Math.min(1, mag * dt * 2.5);   // เลี้ยวหนีลำที่อยู่ใกล้
+    }
+    function separate() {
+        const n = boats.length;
+        for (let it = 0; it < 2; it++) {
+            for (let i = 0; i < n; i++) {
+                const a = boats[i];
+                for (let j = i + 1; j < n; j++) {
+                    const o = boats[j];
+                    footprint(a, o);
+                    const rx = FPX, ry = FPY;
+                    let dx = a.u - o.u, dy = a.v - o.v;
+                    if (Math.abs(dx) > rx || Math.abs(dy) > ry) continue;
+                    let d = Math.sqrt((dx / rx) * (dx / rx) + (dy / ry) * (dy / ry));
+                    if (d >= 1) continue;
+                    if (d < 1e-4) { dx = 0.01; dy = 0.005; d = Math.sqrt((dx / rx) * (dx / rx) + (dy / ry) * (dy / ry)); }
+                    const f = 1 / d - 1;
+                    const wa = a.isMine ? 0.1 : 1, wo = o.isMine ? 0.1 : 1, tw = wa + wo;
+                    const mAx = dx * f * wa / tw, mAy = dy * f * wa / tw, mOx = -dx * f * wo / tw, mOy = -dy * f * wo / tw;
+                    let moved = false;
+                    if (allowed(a.u + mAx, a.v + mAy)) { a.u += mAx; a.v += mAy; moved = true; }
+                    if (allowed(o.u + mOx, o.v + mOy)) { o.u += mOx; o.v += mOy; moved = true; }
+                    if (!moved) {   // ขอบน้ำดันไม่ได้: ให้ลำที่ไม่ใช่ของเราถอยไปตามแนวที่ว่าง
+                        const t = o.isMine ? a : o;
+                        const mx = t === a ? mAx : mOx, my = t === a ? mAy : mOy;
+                        if (allowed(t.u + mx * 2, t.v)) t.u += mx * 2;
+                        else if (allowed(t.u, t.v + my * 2)) t.v += my * 2;
+                    }
+                    a.target = Math.atan2(mAy, mAx) || a.target;
+                    o.target = Math.atan2(mOy, mOx) || o.target;
+                }
+            }
         }
     }
 
@@ -153,6 +250,7 @@
         b.wobble += b.wobbleRate * dt;
         b.target += Math.sin(b.wobble) * 0.35 * dt;       // เลี้ยวเบา ๆ ให้ลอยเป็นทางโค้ง
 
+        avoid(b, dt);
         const probe = ang => allowed(b.u + Math.cos(ang) * (v + look), b.v + Math.sin(ang) * (v + look));
         if (!probe(b.target)) {
             // ใกล้ขอบ: หาทิศที่ยังอยู่ในน้ำ (ลองเบี่ยงซ้าย-ขวาสลับกัน)
@@ -174,21 +272,95 @@
     }
 
     boats.forEach(render);
-    if (!reduced && poly.length > 2) {
-        const t0 = performance.now();
-        boats.forEach(b => { b.startAt = b.isMine ? t0 + 2400 : t0; });   // กระทงเราเริ่มลอยหลังตกลงน้ำ
-        let last = t0;
-        const tick = now => {
-            const dt = Math.min((now - last) / 1000, 0.1);
+
+    // ---- ลูปแอนิเมชันเดียวของทั้งหน้า (เดิมมี rAF แยก 2 ลูป: กระทง + เมฆ) ----
+    // - หยุดทำงานเมื่อซ่อนแท็บ หรือเปิดหน้าต่างคำอธิษฐาน (ฉากถูกบังอยู่ ไม่ต้องคำนวณ)
+    // - ตัวคุมเฟรมเรต: ถ้าเฉลี่ยต่ำกว่า ~38 fps ต่อเนื่อง จะลดเอฟเฟกต์เป็นขั้น (is-lite → is-min) อัตโนมัติ
+    //   เพื่อให้ทุกอุปกรณ์ได้ภาพลื่น แม้เครื่องที่เราไม่ได้ทดสอบ
+    const hooks = [];                                   // (now, dt, frameNo) ทำงานทุกเฟรมที่ไม่ได้หยุดพัก
+    let paused = false, frameNo = 0;
+    function setPaused() {
+        paused = document.hidden || !!(dialog && dialog.open);
+        view.classList.toggle('is-paused', paused);
+    }
+    document.addEventListener('visibilitychange', setPaused);
+
+    if (!reduced) {
+        if (poly.length > 2) {
+            const t0 = performance.now();
+            boats.forEach(b => { b.startAt = b.isMine ? t0 + 2400 : t0; });   // กระทงเราเริ่มลอยหลังตกลงน้ำ
+            hooks.push((now, dt, n) => {
+                for (const b of boats) if (now >= b.startAt) step(b, dt);
+                if (n % 2 === 0) separate();                                   // O(n²) — ทำทุก 2 เฟรมพอ ตาดูไม่ออก
+                for (const b of boats) if (now >= b.startAt) render(b);
+            });
+        }
+        let last = performance.now();
+        const frame = now => {
+            requestAnimationFrame(frame);
+            const raw = now - last;
             last = now;
-            boats.forEach(b => { if (now >= b.startAt) { step(b, dt); render(b); } });
-            requestAnimationFrame(tick);
+            if (paused) return;
+            frameNo++;
+            const dt = Math.min(raw / 1000, 0.1);
+            for (const h of hooks) h(now, dt, frameNo);
         };
-        requestAnimationFrame(tick);
+        requestAnimationFrame(frame);
+    }
+
+    // ---- ผืนน้ำ: วาดลง canvas ใบเดียว ----
+    // เดิมเป็นแถบ CSS 9 ชั้น + clip-path ที่ต้องวาดมาสก์ใหม่ทุกเฟรม → เหลือ 1 เลเยอร์ วาดที่ ~30fps ด้วยความละเอียดต่ำ (น้ำเป็นภาพสะท้อนนุ่มๆ ตาดูไม่ออก)
+    const wave = document.getElementById('riverWave');
+    if (wave && wave.getContext && !reduced && poly.length > 2) {
+        let bands = [];
+        try { bands = JSON.parse(world.dataset.bands || '[]'); } catch (e) { bands = []; }
+        const img = new Image();
+        img.decoding = 'async';
+        img.onload = () => {
+            const CW = 480, CH = Math.round(CW * RATIO);
+            wave.width = CW; wave.height = CH;
+            const g = wave.getContext('2d');
+            g.beginPath();                                                       // ตัดด้วยขอบผืนน้ำ ครั้งเดียวตอนเริ่ม
+            polyPct.forEach(([x, y], i) => { const px = x / 100 * CW, py = y / 100 * CH; if (i) g.lineTo(px, py); else g.moveTo(px, py); });
+            g.closePath();
+            g.clip();
+            const src = document.createElement('canvas');                        // ย่อภาพต้นฉบับครั้งเดียว แล้ววาดจากภาพเล็กทุกเฟรม (เบากว่าย่อจากภาพใหญ่ซ้ำ ๆ)
+            src.width = CW; src.height = CH;
+            src.getContext('2d').drawImage(img, 0, 0, CW, CH);
+            const waves = bands.map(([top, h], n) => ({ top, h: h + 0.15, amp: (0.0011 + n * 0.00032) * 3.2, dur: 5.2 + ((n * 37) % 11) * 0.33, del: -0.97 * n }));
+            // แสงจันทร์สะท้อนบนน้ำ: แท่งไล่สีนุ่ม ๆ สร้างครั้งเดียว กะพริบด้วย globalAlpha (ถูกตัดด้วยขอบน้ำอยู่แล้ว)
+            const colX = CW * 0.665, colW = CW * 0.17, colTop = CH * 0.63;
+            const col = g.createLinearGradient(0, colTop, 0, CH);
+            col.addColorStop(0, 'rgba(255,226,150,.38)'); col.addColorStop(1, 'rgba(255,226,150,.05)');
+            const colH = g.createLinearGradient(colX - colW, 0, colX + colW, 0);
+            colH.addColorStop(0, 'rgba(255,226,150,0)'); colH.addColorStop(.5, 'rgba(255,226,150,1)'); colH.addColorStop(1, 'rgba(255,226,150,0)');
+            const draw = t => {
+                g.clearRect(0, 0, CW, CH);
+                for (const w of waves) {
+                    const dx = -w.amp * CW * Math.cos(Math.PI * (t + w.del) / w.dur);
+                    g.drawImage(src, 0, w.top / 100 * CH, CW, w.h / 100 * CH, dx, w.top / 100 * CH, CW, w.h / 100 * CH);
+                }
+                // ชั้นแสงสะท้อน: ลายระลอกแนวนอนเรียงเป็นเส้นบางที่ขยับไปมา
+                g.fillStyle = colH;
+                for (let y = colTop, n = 0; y < CH; y += 5, n++) {
+                    const k = (y - colTop) / (CH - colTop);
+                    const sway = Math.sin(t * 1.3 + n * 0.9) * (3 + k * 9);
+                    g.globalAlpha = (0.16 + 0.34 * k) * (0.55 + 0.45 * Math.sin(t * 1.7 + n * 1.3));
+                    g.fillRect(colX - colW * (0.5 + k * 0.7) + sway, y, colW * (1 + k * 1.4), 1.6 + k * 1.4);
+                }
+                g.globalAlpha = 1;
+                g.fillStyle = 'rgba(5,8,34,.42)';                                // โทนมืดเดียวกับ --night-tint ของ .river-world
+                g.fillRect(0, 0, CW, CH);
+            };
+            draw(0);
+            hooks.push((now, dt, n) => { if (n % 3 === 0) draw(now / 1000); });   // ~20fps
+        };
+        img.src = world.dataset.bg || '';
     }
 
     // ---- ตอนปล่อยกระทงของเรา ----
-    if (mine && !reduced) {
+    const returning = world.dataset.returning === '1';   // กลับมาเยี่ยม: กระทงของเราลอยอยู่แล้ว ไม่ต้องเล่นอนิเมชั่นปล่อยซ้ำ
+    if (mine && !reduced && !returning) {
         mine.classList.add('is-releasing');
         const splash = mine.querySelector('.rk-splash');
         setTimeout(() => {
@@ -206,20 +378,127 @@
         toast.classList.add('river-toast-show');
     }
 
-    // ---- โคมลอยบนท้องฟ้า ----
+    // ---- บรรยากาศคืนจันทร์: ดาวระยิบ / ประกายลอยบนผิวน้ำ / โคมลอยฟ้า ----
     if (!reduced) {
-        const spawn = () => {
-            if (sky.children.length < 5) {
-                const l = document.createElement('i');
-                l.className = 'sky-lantern';
-                l.style.left = `${rand(5, 95)}%`;
-                l.style.setProperty('--dx', `${rand(-40, 60)}px`);
-                l.style.setProperty('--t', `${rand(14, 22)}s`);
-                sky.appendChild(l);
-                setTimeout(() => l.remove(), 22500);
+        const frag = document.createDocumentFragment();
+        // จัดกลุ่ม: ดาว/ประกายหลายสิบดวงกะพริบเป็นกลุ่มละ 1 เลเยอร์ (เดิม 1 ดวง = 1 เลเยอร์ที่เบราว์เซอร์ต้องคอมโพสต์ทุกเฟรม)
+        const mkGroups = (parent, cls, k, tMin, tMax) => Array.from({ length: k }, (_, i) => {
+            const g = document.createElement('div');
+            g.className = cls;
+            g.style.cssText = `--t:${(tMin + (tMax - tMin) * i / Math.max(1, k - 1)).toFixed(1)}s;--d:${(-i * 1.7).toFixed(1)}s`;
+            parent.appendChild(g);
+            return g;
+        });
+        const sg = mkGroups(frag, 'sg', 2, 2.8, 6);
+        const starCount = lowPower ? 8 : 12;
+        for (let i = 0; i < starCount; i++) {
+            const x = rand(2, 98), y = rand(2, 96);
+            if (Math.hypot(x - MOON[0], (y * 0.58 - MOON[1]) * RATIO) < MOON[2] * 1.5) continue;   // ไม่ใส่ดาวทับดวงจันทร์
+            const s = document.createElement('i');
+            s.style.cssText = `left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;--t:${rand(2.8, 6).toFixed(1)}s;--d:${rand(-6, 0).toFixed(1)}s`;
+            sg[i % sg.length].appendChild(s);
+        }
+        stars && stars.appendChild(frag);
+
+        // หิ่งห้อย/ประกายแสงบนผิวน้ำ: สุ่มแบบกระจายสม่ำเสมอ (เลือกจุดที่ห่างจากดวงอื่นที่สุด) เฉพาะในผืนน้ำ
+        const of = document.createDocumentFragment();
+        const placed = [];
+        const og = mkGroups(of, 'og', 2, 5, 11);
+        const orbCount = lowPower ? 5 : 8;
+        for (let n = 0, tries = 0; n < orbCount && tries < 400; tries++) {
+            let best = null, bestGap = -1;
+            for (let c = 0; c < 8; c++) {
+                const x = rand(PX0, PX1), y = rand(Y_FAR, Y_NEAR);
+                if (!inside(x, y * RATIO)) continue;
+                const gap = placed.reduce((g, q) => Math.min(g, Math.hypot(q[0] - x, (q[1] - y) * RATIO)), 99);
+                if (gap > bestGap) { bestGap = gap; best = [x, y]; }
             }
-            setTimeout(spawn, rand(2500, 5000));
+            if (!best) continue;
+            placed.push(best);
+            const o = document.createElement('i');
+            const sz = 0.6 + (best[1] - Y_FAR) / (Y_NEAR - Y_FAR) * 0.9;   // ยิ่งใกล้ยิ่งใหญ่
+            o.style.cssText = `left:${best[0].toFixed(1)}%;top:${best[1].toFixed(1)}%;--z:${sz.toFixed(2)};--t:${rand(5, 11).toFixed(1)}s;--d:${rand(-10, 0).toFixed(1)}s`;
+            og[n % og.length].appendChild(o);
+            n++;
+        }
+        orbs && orbs.appendChild(of);
+
+        // โคมลอย: ขึ้นจากฝั่งตรงข้าม (หลังแนวต้นไม้/วัด y≈60% ของภาพ) ปล่อยกระจายหลายจุดตลอดแนวฝั่ง ถี่ขึ้นและมีหลายขนาด (ไกล/ใกล้)
+        const maxLanterns = lowPower ? 2 : 3;
+        let lastX = 50;
+        const spawnOne = () => {
+            if (document.hidden || sky.children.length >= maxLanterns) return;
+            let x = rand(5, 97);
+            for (let t = 0; t < 6 && Math.abs(x - lastX) < 12; t++) x = rand(5, 97);   // ไม่ปล่อยซ้ำจุดเดิมติดกัน
+            lastX = x;
+            const near = Math.random();
+            const l = document.createElement('i');
+            l.className = 'sky-lantern';
+            l.appendChild(document.createElement('b'));
+            l.style.left = `${x.toFixed(1)}%`;
+            l.style.bottom = `${rand(-2, 7).toFixed(1)}%`;
+            l.style.setProperty('--ls', (0.008 + near * 0.014).toFixed(4));
+            l.style.setProperty('--dx', `${rand(-70, 90).toFixed(0)}px`);
+            l.style.setProperty('--rise', rand(-0.46, -0.3).toFixed(2));
+            l.style.setProperty('--t', `${(27 - near * 7 + rand(-3, 3)).toFixed(1)}s`);
+                        sky.appendChild(l);
+            setTimeout(() => l.remove(), 34000);
         };
-        spawn();
+        const spawnLoop = () => { spawnOne(); setTimeout(spawnLoop, rand(8000, 13000)); };
+        for (let i = 0; i < 2; i++) setTimeout(spawnOne, 300 + i * 1800);   // เปิดหน้ามาแล้วมีโคมขึ้นทันทีหลายดวง
+        setTimeout(spawnLoop, 3200);
+    }
+
+    // ---- แถบปุ่มด้านล่าง: ข้อความช่วยเหลือหุบเก็บหลังอ่านแล้ว ให้เหลือแต่ปุ่ม (ไม่รก) ----
+    if (toast && toast.querySelector('.river-toast-msg')) {
+        setTimeout(() => toast.classList.add('is-compact'), mine && !reduced && !returning ? 11500 : 7500);
+    }
+
+    // ---- อัปเดตสด: ยอดกระทง + กระทงใหม่ที่คนอื่นเพิ่งลอย (ถามเซิร์ฟเวอร์ทุก ~25 วินาที) ----
+    const liveUrl = world.dataset.live;
+    let latestId = parseInt(world.dataset.latest, 10) || 0;
+    function addLiveBoat(html) {
+        const tpl = document.createElement('template');
+        tpl.innerHTML = html.trim();
+        const el = tpl.content.firstElementChild;
+        if (!el || world.querySelector(`.rk[data-id="${el.dataset.id}"]`)) return;
+        world.appendChild(el);
+        const b = makeBoat(el);
+        boats.push(b);
+        bindWish(el);
+        bindFit(el);
+        if (locked && !allowed(b.u, b.v)) relocate(b);
+        b.target = b.heading;
+        b.startAt = performance.now();
+        render(b);
+        if (!reduced) {
+            el.classList.add('rk-arrive');
+            el.addEventListener('animationend', () => el.classList.remove('rk-arrive'), { once: true });
+        }
+        // เกินเพดาน: เอากระทงเก่าสุด (ไม่ใช่ของเรา) ออก
+        while (boats.length > MAX_BOATS) {
+            const i = boats.findIndex(o => !o.isMine);
+            if (i < 0) break;
+            boats[i].el.remove();
+            boats.splice(i, 1);
+        }
+    }
+    async function pollLive() {
+        try {
+            const res = await fetch(`${liveUrl}?after=${latestId}`, { cache: 'no-store', credentials: 'same-origin' });
+            if (!res.ok) throw new Error(res.status);
+            const data = await res.json();
+            if (window.ktUpdateStats) window.ktUpdateStats(data);
+            (data.boats || []).forEach(addLiveBoat);
+            if (data.latest > latestId) latestId = data.latest;
+        } catch (e) { /* เงียบไว้ แล้วลองใหม่รอบหน้า */ }
+    }
+    if (liveUrl && window.fetch) {
+        const schedule = () => setTimeout(async () => {
+            if (!document.hidden) await pollLive();
+            schedule();
+        }, rand(22000, 30000));
+        schedule();
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) pollLive(); });   // กลับมาที่แท็บ: อัปเดตทันที
     }
 })();

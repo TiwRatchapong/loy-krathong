@@ -84,8 +84,8 @@ try {
 
         if (!$errors) {
             $pdo->beginTransaction();
-            $statement = $pdo->prepare('INSERT INTO krathongs (nickname, krathong_type_id, flower_set_id, prayer_type, prayer) VALUES (:nickname, :type_id, :set_id, :prayer_type, :prayer)');
-            $statement->execute([':nickname' => $nickname, ':type_id' => $selectedKrathongId, ':set_id' => $selectedFlowerSetId, ':prayer_type' => $prayerType, ':prayer' => $prayer]);
+            $statement = $pdo->prepare('INSERT INTO krathongs (nickname, krathong_type_id, flower_set_id, prayer_type, prayer, owner_token_hash) VALUES (:nickname, :type_id, :set_id, :prayer_type, :prayer, :owner)');
+            $statement->execute([':nickname' => $nickname, ':type_id' => $selectedKrathongId, ':set_id' => $selectedFlowerSetId, ':prayer_type' => $prayerType, ':prayer' => $prayer, ':owner' => ownerHash(ensureOwnerToken())]);   // ผูกกระทงกับเบราว์เซอร์นี้
             $createdId = (int) $pdo->lastInsertId();
             $flowerStatement = $pdo->prepare('INSERT INTO krathong_flowers (krathong_id, flower_id, quantity) VALUES (:krathong_id, :flower_id, :quantity)');
             foreach ($selectedSet['items'] as $item) {
@@ -121,8 +121,8 @@ if (empty($_SESSION['csrf_token'])) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="preload" as="image" href="../assets/images/backgrounds/river-night.webp" type="image/webp">
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="preload" as="image" href="../assets/images/backgrounds/river-lantern-night.webp" type="image/webp">
+    <link rel="stylesheet" href="<?= e(asset('assets/css/style.css')) ?>">
 </head>
 <body class="create-page">
     <?php renderSvgSprite(); ?>
@@ -253,8 +253,8 @@ if (empty($_SESSION['csrf_token'])) {
         <?php endif; ?>
     </main>
     <footer class="site-footer"><span class="footer-brand"><?= svgLotusIcon() ?> ลอยกระทงออนไลน์</span><span>ขอให้ค่ำคืนนี้เต็มไปด้วยความสุข</span></footer>
-    <script src="../assets/js/script.js"></script>
-    <script src="../assets/js/audio.js"></script>
-    <script src="../assets/js/create.js"></script>
+    <script src="<?= e(asset('assets/js/script.js')) ?>"></script>
+    <script src="<?= e(asset('assets/js/audio.js')) ?>"></script>
+    <script src="<?= e(asset('assets/js/create.js')) ?>"></script>
 </body>
 </html>

@@ -50,6 +50,7 @@ renderPageTop($krathong ? 'กระทงของ ' . $krathong['nickname'] : 
                 <blockquote class="view-prayer reveal"><?= nl2br(e($krathong['prayer'])) ?></blockquote>
                 <div class="success-actions reveal">
                     <button type="button" class="button button-primary" id="replayRelease">ปล่อยอีกครั้ง <span>↻</span></button>
+                    <button type="button" class="button button-ghost" id="saveImage" data-name="<?= e($krathong['nickname']) ?>" data-prayer="<?= e($krathong['prayer']) ?>">บันทึกเป็นรูปภาพ <span>⬇</span></button>
                     <button type="button" class="button button-ghost" id="copyLink" data-url="view.php?id=<?= (int) $krathong['id'] ?>">คัดลอกลิงก์แชร์ <span>⧉</span></button>
                     <a class="button button-ghost" href="river.php">ไปที่แม่น้ำของทุกคน</a>
                     <a class="button button-ghost" href="create.php">สร้างกระทงอีกใบ</a>

@@ -1,6 +1,13 @@
 <?php
 require_once __DIR__ . '/includes/svg.php';
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/config/database.php';
+$counts = ['total' => 0, 'today' => 0];
+try {
+    $counts = krathongCounts(getDatabase());
+} catch (Throwable $exception) {
+    error_log($exception->getMessage());
+}
 $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหัศจรรย์ริมสายน้ำ';
 ?>
 <!DOCTYPE html>
@@ -14,9 +21,9 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
     <?php renderMetaTags('', ['title' => $pageTitle, 'path' => '']); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="preload" as="image" href="assets/images/backgrounds/river-night.webp" type="image/webp">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="assets/images/backgrounds/river-lantern-night.webp" type="image/webp">
+    <link rel="stylesheet" href="<?= htmlspecialchars(asset('assets/css/style.css', ''), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 <body>
     <div class="scene" aria-hidden="true"></div>
@@ -27,6 +34,8 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
         <a class="brand" href="index.php" aria-label="ลอยกระทงออนไลน์ หน้าแรก">
             <span class="brand-mark"><?= svgLotusIcon() ?></span>
             <span>ลอยกระทง<span class="brand-light">ออนไลน์</span></span>
+            <span class="brand-sep" aria-hidden="true"></span>
+            <img class="brand-partner" src="assets/images/ch5-emblem.png" alt="TV5HD Online" width="38" height="36">
         </a>
 
         <button class="menu-toggle" id="menuToggle" aria-label="เปิดเมนู" aria-expanded="false">
@@ -50,6 +59,7 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
                     <a class="button button-primary" href="pages/create.php">สร้างกระทงของฉัน <span class="button-icon">✧</span></a>
                     <a class="button button-ghost" href="pages/river.php">ชมกระทงทั้งหมด <span class="arrow">→</span></a>
                 </div>
+                <?= renderKrathongStats($counts, 'kt-stats-hero', 'pages/live.php') ?>
                 <div class="hero-note"><span class="note-icon">☾</span> เทศกาลแห่งความสุข เริ่มต้นได้จากตรงนี้</div>
             </div>
             <a class="scroll-hint" href="#about"><span class="scroll-line"></span> เลื่อนลงเพื่อสำรวจ</a>
@@ -61,6 +71,7 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
             <h2>หนึ่งกระทง <span>หนึ่งคำอธิษฐาน</span></h2>
             <p class="intro-copy">เลือกกระทงในแบบที่ชอบ เติมดอกไม้ที่ใช่ เขียนคำอธิษฐานจากใจ<br class="desktop-break"> แล้วปล่อยให้กระทงน้อย ๆ ล่องลอยไปบนสายน้ำแห่งความหวัง</p>
             <a class="text-link" href="pages/create.php">เริ่มต้นสร้างความทรงจำ <span>→</span></a>
+            <div class="partner-plate"><img src="assets/images/ch5-logo.jpg" alt="TV5HD Online" width="428" height="417" loading="lazy"></div>
         </section>
     </main>
 
@@ -69,7 +80,7 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
         <span>สร้างความสุขเล็ก ๆ ไปกับสายน้ำ · <a class="footer-link" href="pages/privacy.php">ความเป็นส่วนตัว</a></span>
     </footer>
 
-    <script src="assets/js/script.js"></script>
-    <script src="assets/js/audio.js"></script>
+    <script src="<?= htmlspecialchars(asset('assets/js/script.js', ''), ENT_QUOTES, 'UTF-8') ?>"></script>
+    <script src="<?= htmlspecialchars(asset('assets/js/audio.js', ''), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 </html>

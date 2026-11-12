@@ -462,19 +462,6 @@ if ($p === 'log') {
 // =============================== ระบบและความปลอดภัย ===============================
 if ($p === 'system') {
     $dbFile = (string) ($pdo->query('PRAGMA database_list')->fetch()['file'] ?? '');
-    $docRoot = (string) (realpath((string) ($_SERVER['DOCUMENT_ROOT'] ?? '')) ?: '');
-    $realDb = (string) (realpath($dbFile) ?: $dbFile);
-    $inWebRoot = $docRoot !== '' && str_starts_with($realDb, $docRoot);
-    $adminSource = getenv('KRATHONG_ADMIN_HASH') ? 'environment variable' : 'config/admin.php';
-    // [ชื่อ, สถานะ ok|warn|bad, รายละเอียด]
-    $checks = [
-        ['HTTPS', isHttps() ? 'ok' : 'warn', isHttps() ? 'ใช้ HTTPS อยู่' : 'ยังไม่ใช้ HTTPS — ตอนใช้งานจริงควรเปิด เพราะรหัสผ่านผู้ดูแลถูกส่งตอนล็อกอิน'],
-        ['ตำแหน่งไฟล์ฐานข้อมูล', $inWebRoot ? 'warn' : 'ok', $inWebRoot ? 'อยู่ใน web root — ต้องมั่นใจว่ากันดาวน์โหลดไว้ (ลองเปิดไฟล์ผ่านเบราว์เซอร์) หรือย้ายด้วย KRATHONG_DB_PATH' : 'อยู่นอก web root'],
-        ['รหัสผ่านผู้ดูแล', 'ok', 'อ่านจาก ' . $adminSource . ' · หมดเวลาอัตโนมัติเมื่อไม่ใช้งาน ' . (ADMIN_IDLE_SECONDS / 60) . ' นาที'],
-        ['Reverse proxy / Cloudflare', getenv('KRATHONG_TRUST_PROXY') === '1' ? 'ok' : 'warn', getenv('KRATHONG_TRUST_PROXY') === '1' ? 'เปิด KRATHONG_TRUST_PROXY (อ่าน IP จริงจาก header)' : 'ใช้ REMOTE_ADDR — ถ้าอยู่หลัง proxy ให้ตั้ง KRATHONG_TRUST_PROXY=1 ไม่เช่นนั้น rate limit จะนับ IP ของ proxy'],
-        ['KRATHONG_BASE_URL', getenv('KRATHONG_BASE_URL') ? 'ok' : 'warn', getenv('KRATHONG_BASE_URL') ?: 'ไม่ได้ตั้ง — ใช้โดเมนจากคำขอ ควรตั้งเป็นโดเมนจริงเพื่อให้ og:url ถูกต้อง'],
-        ['PHP', version_compare(PHP_VERSION, '8.2.0', '>=') ? 'ok' : 'bad', PHP_VERSION . ' (ต้องการ 8.2+) · pdo_sqlite: ' . (extension_loaded('pdo_sqlite') ? 'เปิด' : 'ปิด') . ' · mbstring: ' . (extension_loaded('mbstring') ? 'เปิด' : 'ปิด')],
-    ];
     $dbSize = is_file($dbFile) ? filesize($dbFile) : 0;
     $info = [
         'SQLite' => (string) $pdo->query('SELECT sqlite_version()')->fetchColumn(),
@@ -487,14 +474,6 @@ if ($p === 'system') {
     $bucketLabels = ['create_burst' => 'สร้างกระทง (ช่วงสั้น 10 นาที)', 'create_daily' => 'สร้างกระทง (รายวัน)', 'check_text' => 'ตรวจคำหยาบ', 'admin_login' => 'เข้าสู่ระบบผู้ดูแล', 'report_burst' => 'รายงานกระทง (ช่วงสั้น 10 นาที)', 'report_daily' => 'รายงานกระทง (รายวัน)'];
     $testText = trim((string) ($_GET['t'] ?? ''));
     ?>
-    <section class="panel">
-        <header class="panel-head"><h2>ตรวจสอบความพร้อม</h2></header>
-        <ul class="checks">
-            <?php foreach ($checks as [$name, $state, $text]): ?>
-                <li><span class="dot dot-<?= e($state) ?>" aria-label="<?= e($state) ?>"></span><div><strong><?= e($name) ?></strong><p><?= e($text) ?></p></div></li>
-            <?php endforeach; ?>
-        </ul>
-    </section>
     <div class="grid-2">
         <section class="panel"><header class="panel-head"><h2>ฐานข้อมูลและเซิร์ฟเวอร์</h2></header>
             <dl class="kv"><?php foreach ($info as $k => $v): ?><dt><?= e($k) ?></dt><dd><?= e($v) ?></dd><?php endforeach; ?></dl>

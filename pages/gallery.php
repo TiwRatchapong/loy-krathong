@@ -10,10 +10,12 @@ const GALLERY_PER_PAGE = 24;
 $page = max(1, (int) ($_GET['page'] ?? 1));
 $krathongs = [];
 $total = 0;
+$counts = ['total' => 0, 'today' => 0];
 $error = '';
 try {
     $pdo = getDatabase();
-    $total = (int) $pdo->query('SELECT COUNT(*) FROM krathongs WHERE is_hidden = 0')->fetchColumn();
+    $counts = krathongCounts($pdo);
+    $total = $counts['total'];
     $pages = max(1, (int) ceil($total / GALLERY_PER_PAGE));
     $page = min($page, $pages);
     $krathongs = loadKrathongs($pdo, '', [], GALLERY_PER_PAGE, ($page - 1) * GALLERY_PER_PAGE);
@@ -29,7 +31,8 @@ renderPageTop('กระทงของทุกคน', 'create-page gallery-pa
         <div class="create-heading">
             <p class="section-kicker">COMMUNITY GALLERY</p>
             <h1>กระทงของ<span>ทุกคน</span></h1>
-            <p>กดที่กระทงเพื่ออ่านคำอธิษฐาน · ทั้งหมด <?= number_format($total) ?> ใบ</p>
+            <p>กดที่กระทงเพื่ออ่านคำอธิษฐาน</p>
+            <?= renderKrathongStats($counts, '', 'live.php') ?>
         </div>
 
         <?php if ($error !== ''): ?>

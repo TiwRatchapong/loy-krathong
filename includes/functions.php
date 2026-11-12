@@ -1,6 +1,14 @@
 <?php
 declare(strict_types=1);
 
+/** ลิงก์ไฟล์ static พร้อมเลขเวอร์ชันจากเวลาแก้ไขไฟล์ (?v=...) — ตั้ง cache ยาวได้โดยผู้ใช้ไม่ค้างไฟล์เก่าหลังอัปเดต */
+function asset(string $path, string $prefix = '../'): string
+{
+    $file = __DIR__ . '/../' . $path;
+    $version = is_file($file) ? (int) filemtime($file) : 0;
+    return $prefix . $path . ($version > 0 ? '?v=' . $version : '');
+}
+
 function e(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -20,6 +28,55 @@ function isHttps(): bool
     }
     return getenv('KRATHONG_TRUST_PROXY') === '1'
         && strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+}
+
+/* ---- จำกระทงของผู้ใช้ (ไม่ต้องล็อกอิน) ----
+   เบราว์เซอร์แต่ละเครื่องถือ "token สุ่ม 256 บิต" ใน cookie kt_owner (HttpOnly, SameSite=Lax, อายุ 1 ปี ต่ออายุทุกครั้งที่เข้า)
+   ฐานข้อมูลเก็บเฉพาะค่า SHA-256 ของ token ในคอลัมน์ krathongs.owner_token_hash (ฐานข้อมูลรั่วก็เอาไปสวมสิทธิ์ไม่ได้)
+   (ไม่มีระบบกู้คืน: ล้าง cookie หรือเปลี่ยนเครื่องแล้วจะไม่เห็นว่าอันไหนเป็นของตน) */
+const OWNER_COOKIE = 'kt_owner';
+
+function isOwnerToken(string $token): bool
+{
+    return (bool) preg_match('/^[a-f0-9]{64}$/', $token);
+}
+
+function ownerHash(string $token): string
+{
+    return hash('sha256', $token);
+}
+
+function setOwnerCookie(string $token): void
+{
+    if (headers_sent()) {
+        return;
+    }
+    setcookie(OWNER_COOKIE, $token, [
+        'expires' => time() + 365 * 86400,
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure' => isHttps(),
+    ]);
+    $_COOKIE[OWNER_COOKIE] = $token;
+}
+
+/** token ของเบราว์เซอร์นี้ (null ถ้ายังไม่มี) */
+function currentOwnerToken(): ?string
+{
+    $token = (string) ($_COOKIE[OWNER_COOKIE] ?? '');
+    return isOwnerToken($token) ? $token : null;
+}
+
+/** token ของเบราว์เซอร์นี้ ถ้ายังไม่มีให้สร้างใหม่และตั้ง cookie (เรียกก่อนมี output) */
+function ensureOwnerToken(): string
+{
+    $token = currentOwnerToken();
+    if ($token === null) {
+        $token = bin2hex(random_bytes(32));
+    }
+    setOwnerCookie($token);
+    return $token;
 }
 
 /** เริ่มเซสชันพร้อม cookie ที่ปลอดภัยขึ้น (HttpOnly, SameSite=Lax, Secure เมื่อใช้ HTTPS) */
@@ -207,6 +264,48 @@ function loadKrathongs(PDO $pdo, string $where = '', array $params = [], int $li
     return $rows;
 }
 
+/**
+ * จำนวนกระทงที่แสดงสาธารณะ: ทั้งหมด และ "วันนี้" (นับตามเวลาไทย Asia/Bangkok)
+ * created_at เก็บเป็น UTC (CURRENT_TIMESTAMP) จึงแปลงเที่ยงคืนเวลาไทยเป็น UTC ก่อนเทียบ
+ * ไม่นับกระทงที่ผู้ดูแลซ่อน (is_hidden = 1)
+ *
+ * @return array{total:int, today:int}
+ */
+function krathongCounts(PDO $pdo): array
+{
+    $startUtc = (new DateTimeImmutable('today', new DateTimeZone('Asia/Bangkok')))
+        ->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+    $statement = $pdo->prepare('SELECT COUNT(*) AS total, COALESCE(SUM(created_at >= :start), 0) AS today FROM krathongs WHERE is_hidden = 0');
+    $statement->execute([':start' => $startUtc]);
+    $row = $statement->fetch() ?: [];
+    return ['total' => (int) ($row['total'] ?? 0), 'today' => (int) ($row['today'] ?? 0)];
+}
+
+/** วาด 1 กระทงบนแม่น้ำ */
+function renderRiverKrathong(array $k, bool $isMine): string
+{
+    $style = sprintf('left:%s%%;top:%s%%;--s:%s;--bob:%ss;z-index:%d',
+        $k['x'], $k['y'], $k['scale'], $k['bob'], $isMine ? 500 : (int) round($k['y'] * 4));
+    $art = renderKrathongArt($k['krathong_key'], $k['flower_keys'], 'กระทงของ ' . $k['nickname'], 'krathong-art river-art');
+    return '<button type="button" class="rk' . ($isMine ? ' rk-mine' : '') . '" style="' . e($style) . '"'
+        . ' data-id="' . (int) $k['id'] . '" data-x="' . $k['x'] . '" data-y="' . $k['y'] . '" data-speed="' . $k['speed'] . '" data-heading="' . $k['heading'] . '" data-name="' . e($k['nickname']) . '" data-prayer="' . e($k['prayer']) . '"'
+        . ' aria-label="กระทงของ ' . e($k['nickname']) . '">'
+        . '<span class="rk-drift"><span class="rk-release"><span class="rk-arc"><span class="rk-bob">' . $art . '</span></span></span>'
+        . ($isMine ? '<span class="rk-ring"></span>' : '')
+        . '<span class="rk-splash"></span>'
+        . '<span class="rk-wish" aria-hidden="true">' . e($k['prayer']) . '</span>'
+        . '<span class="rk-tag">' . ($isMine ? '✦ กระทงของคุณ' : e($k['nickname'])) . '</span></span></button>';
+}
+
+/** แถบสถิติ "กระทงทั้งหมด / กระทงวันนี้" ($class ใช้ปรับสไตล์ตามหน้า) */
+function renderKrathongStats(array $counts, string $class = '', string $liveUrl = ''): string
+{
+    return '<div class="kt-stats' . ($class !== '' ? ' ' . e($class) : '') . '" role="status"' . ($liveUrl !== '' ? ' data-live="' . e($liveUrl) . '"' : '') . '>'
+        . '<div class="kt-stat"><strong data-stat="total">' . number_format($counts['total']) . '</strong><span>กระทงทั้งหมด</span></div>'
+        . '<div class="kt-stat"><strong data-stat="today">' . number_format($counts['today']) . '</strong><span>กระทงวันนี้</span></div>'
+        . '</div>';
+}
+
 /** วาดภาพกระทงพร้อมเทียนและดอกไม้เป็น <svg> (ตำแหน่งดอกไม้ต้องตรงกับ FLOWER_SLOTS ใน create.js) */
 function renderKrathongArt(?string $krathongKey, array $flowerKeys, string $label = 'กระทง', string $class = 'krathong-art'): string
 {
@@ -246,7 +345,7 @@ function renderSiteHeader(string $active = ''): void
     $links = ['home' => ['../index.php', 'หน้าแรก'], 'create' => ['create.php', 'สร้างกระทง'], 'river' => ['river.php', 'แม่น้ำของทุกคน']];
     ?>
     <header class="site-header">
-        <a class="brand" href="../index.php" aria-label="ลอยกระทงออนไลน์ หน้าแรก"><span class="brand-mark"><?= svgLotusIcon() ?></span><span>ลอยกระทง<span class="brand-light">ออนไลน์</span></span></a>
+        <a class="brand" href="../index.php" aria-label="ลอยกระทงออนไลน์ หน้าแรก"><span class="brand-mark"><?= svgLotusIcon() ?></span><span>ลอยกระทง<span class="brand-light">ออนไลน์</span></span><span class="brand-sep" aria-hidden="true"></span><img class="brand-partner" src="../assets/images/ch5-emblem.png" alt="TV5HD Online" width="38" height="36"></a>
         <button class="menu-toggle" id="menuToggle" type="button" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="mainNav"><span></span><span></span><span></span></button>
         <nav class="main-nav" id="mainNav" aria-label="เมนูหลัก">
             <?php foreach ($links as $key => [$href, $label]): ?>
@@ -254,6 +353,15 @@ function renderSiteHeader(string $active = ''): void
             <?php endforeach; ?>
         </nav>
     </header>
+    <?php if ($active === 'river'): /* คำเปิดหน้า: เฉพาะหน้าแม่น้ำ */ ?>
+    <div class="moon-intro" aria-hidden="true">
+        <div class="moon-intro-inner">
+            <svg class="moon-intro-icon" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="miHalo"><stop offset="0" stop-color="#ffe9a8" stop-opacity=".55"/><stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/></radialGradient></defs><circle cx="32" cy="32" r="31" fill="url(#miHalo)"/><path d="M40 10a23 23 0 1 0 0 44 18 18 0 0 1 0-44z" fill="#ffe9a8"/></svg>
+            <p class="moon-intro-text"><span>คืนเพ็ญ</span><span>เดือนสิบสอง</span></p>
+            <span class="moon-intro-line"></span>
+        </div>
+    </div>
+    <?php endif; ?>
 <?php
 }
 
@@ -270,9 +378,9 @@ function renderPageTop(string $title, string $bodyClass = 'create-page', string 
     <?php renderMetaTags('../', $meta + ['title' => $title . ' | ลอยกระทงออนไลน์', 'path' => 'pages/' . basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''))]); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="preload" as="image" href="../assets/images/backgrounds/river-night.webp" type="image/webp">
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600<?= $active === 'river' ? '&family=Charmonman:wght@400' : '' ?>&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="../assets/images/backgrounds/river-lantern-night.webp" type="image/webp">
+    <link rel="stylesheet" href="<?= e(asset('assets/css/style.css')) ?>">
 </head>
 <body class="<?= e($bodyClass) ?>">
     <?php renderSvgSprite(); ?>
@@ -287,9 +395,9 @@ function renderPageBottom(string|array $scripts = ''): void
     $scripts = array_values(array_filter((array) $scripts, static fn ($s) => $s !== ''));
     ?>
     <footer class="site-footer"><span class="footer-brand"><?= svgLotusIcon() ?> ลอยกระทงออนไลน์</span><span>ขอให้ค่ำคืนนี้เต็มไปด้วยความสุข · <a class="footer-link" href="privacy.php">ความเป็นส่วนตัว</a></span></footer>
-    <script src="../assets/js/script.js"></script>
-    <script src="../assets/js/audio.js"></script>
-    <?php foreach ($scripts as $script): ?><script src="../assets/js/<?= e((string) $script) ?>"></script>
+    <script src="<?= e(asset('assets/js/script.js')) ?>"></script>
+    <script src="<?= e(asset('assets/js/audio.js')) ?>"></script>
+    <?php foreach ($scripts as $script): ?><script src="<?= e(asset('assets/js/' . $script)) ?>"></script>
     <?php endforeach; ?>
 </body>
 </html>
@@ -297,12 +405,12 @@ function renderPageBottom(string|array $scripts = ''): void
 }
 
 // ---------- แม่น้ำในภาพพื้นหลัง ----------
-// ทุกค่าเป็นเปอร์เซ็นต์ของภาพ river-night.png (x = ความกว้าง, y = ความสูง) จึงใช้ได้กับทุกขนาดหน้าจอ
+// ทุกค่าเป็นเปอร์เซ็นต์ของภาพ river-lantern-night.png (x = ความกว้าง, y = ความสูง) จึงใช้ได้กับทุกขนาดหน้าจอ
 const RIVER_RATIO = 0.5628;        // สูง/กว้าง ของภาพ (941/1672)
-const RIVER_Y_FAR = 55.0;          // y ของผืนน้ำส่วนที่ไกลที่สุด (ใกล้เส้นขอบฟ้า)
-const RIVER_Y_NEAR = 85.0;         // y ของผืนน้ำส่วนที่ใกล้ที่สุด (ริมท่าน้ำ)
-const RIVER_SCALE_FAR = 0.30;      // ขนาดกระทงเมื่ออยู่ไกลสุด
-const RIVER_SCALE_NEAR = 1.25;     // ขนาดกระทงเมื่ออยู่ใกล้สุด
+const RIVER_Y_FAR = 63.5;          // y ของผืนน้ำส่วนที่ไกลที่สุด (ใกล้ฝั่งตรงข้าม)
+const RIVER_Y_NEAR = 97.5;         // y ของผืนน้ำส่วนที่ใกล้ที่สุด (ริมท่าน้ำ)
+const RIVER_SCALE_FAR = 0.42;      // ขนาดกระทงเมื่ออยู่ไกลสุด
+const RIVER_SCALE_NEAR = 1.35;     // ขนาดกระทงเมื่ออยู่ใกล้สุด
 
 /**
  * ขอบเขตผืนน้ำที่กระทงลอยได้ (พอลิกอนตามที่วาดไว้บนภาพ) กระทงจะไม่ลอยออกนอกพื้นที่นี้
@@ -312,56 +420,137 @@ const RIVER_SCALE_NEAR = 1.25;     // ขนาดกระทงเมื่อ
 function riverPolygon(): array
 {
     return [
-        [18.47, 56.67],
-        [18.94, 58.16],
-        [26.81, 57.88],
-        [30.88, 59.08],
-        [31.14, 63.9],
-        [32.39, 64.64],
-        [33.54, 68.54],
-        [35.73, 70.76],
-        [36.46, 74.47],
-        [46.43, 74.19],
-        [48.36, 73.26],
-        [52.63, 73.91],
-        [65.83, 73.82],
-        [67.14, 77.34],
-        [68.02, 84.67],
-        [68.6, 85.31],
-        [72.82, 85.22],
-        [73.87, 79.38],
-        [74.54, 78.92],
-        [79.45, 79.75],
-        [80.8, 80.68],
-        [81.12, 83.18],
-        [81.64, 83.92],
-        [85.71, 84.11],
-        [86.18, 82.07],
-        [88.26, 81.79],
-        [88.84, 79.29],
-        [88.63, 77.06],
-        [86.12, 75.03],
-        [86.18, 70.21],
-        [86.65, 68.63],
-        [90.92, 68.35],
-        [94.84, 66.13],
-        [95.98, 63.72],
-        [98.07, 64.27],
-        [98.44, 63.53],
-        [98.38, 60.47],
-        [97.34, 59.73],
-        [85.55, 60.38],
-        [79.19, 59.18],
-        [77.99, 57.04],
-        [58.32, 57.14],
-        [52.32, 55.75],
-        [39.49, 56.4],
-        [38.5, 56.02],
-        [37.72, 54.63],
-        [31.19, 54.45],
-        [30.83, 55.75],
-        [18.73, 55.38],
+        [4.19, 64.44],
+        [4.31, 64.86],
+        [6.58, 66.67],
+        [6.7, 67.41],
+        [7.48, 67.41],
+        [7.95, 67.83],
+        [9.27, 70.38],
+        [9.39, 71.34],
+        [9.75, 71.66],
+        [10.77, 74.52],
+        [11.84, 76.33],
+        [15.55, 79.3],
+        [15.67, 80.47],
+        [17.05, 80.89],
+        [18.72, 83.23],
+        [19.68, 83.86],
+        [20.1, 86.84],
+        [21.23, 88.11],
+        [24.28, 89.92],
+        [27.03, 90.34],
+        [31.64, 91.83],
+        [32.0, 91.3],
+        [32.0, 90.13],
+        [32.6, 87.79],
+        [38.1, 87.79],
+        [39.59, 88.22],
+        [40.13, 88.64],
+        [39.83, 93.21],
+        [40.31, 96.6],
+        [40.97, 97.24],
+        [44.02, 97.98],
+        [50.0, 97.77],
+        [51.02, 97.24],
+        [58.37, 97.03],
+        [71.29, 97.13],
+        [71.35, 96.28],
+        [77.81, 95.86],
+        [78.23, 95.33],
+        [79.49, 94.9],
+        [81.28, 92.99],
+        [82.36, 90.98],
+        [84.03, 89.6],
+        [85.05, 88.32],
+        [89.77, 85.46],
+        [91.69, 82.91],
+        [94.32, 82.27],
+        [95.39, 81.53],
+        [96.17, 81.53],
+        [96.35, 81.85],
+        [98.15, 81.53],
+        [98.33, 81.21],
+        [98.33, 78.24],
+        [98.74, 75.69],
+        [98.8, 66.24],
+        [98.68, 65.5],
+        [98.03, 64.86],
+        [95.69, 64.86],
+        [92.28, 65.71],
+        [79.49, 65.71],
+        [76.26, 64.97],
+        [68.06, 64.86],
+        [64.23, 64.44],
+        [41.99, 64.54],
+        [41.81, 64.86],
+        [12.86, 64.86],
+        [10.53, 64.12],
+        [6.94, 64.01],
+        [4.49, 63.48],
     ];
+}
+
+/** ค่า CSS clip-path: polygon(...) ของผืนน้ำ (เป็น % ของภาพ) ใช้ตัดชั้นอนิเมชั่นน้ำให้ขยับอยู่ในพื้นที่นี้เท่านั้น */
+function riverClipPath(): string
+{
+    return 'polygon(' . implode(',', array_map(static fn (array $p): string => $p[0] . '% ' . $p[1] . '%', riverPolygon())) . ')';
+}
+
+/**
+ * ขอบเขตท้องฟ้าที่เมฆลอยได้ (พอลิกอนตามเส้นที่วาดไว้บนภาพ; เป็น % ของภาพ เหมือน riverPolygon)
+ * เมฆจะลอยและค่อย ๆ จางหายอยู่ในพื้นที่นี้เท่านั้น ไม่ทับต้นไม้ โคมไฟ ภูเขา และวัดริมฝั่ง
+ *
+ * @return array<int, array{0:float,1:float}>
+ */
+function riverCloudPolygon(): array
+{
+    return [
+        [20.4, 0],
+        [100, 0],
+        [100, 37.5],
+        [95, 38.5],
+        [94.6, 41.4],
+        [94.9, 41.7],
+        [92.7, 44.6],
+        [86.9, 44.9],
+        [83.3, 46.5],
+        [82.3, 45.6],
+        [82.2, 43.1],
+        [81.5, 42],
+        [78.9, 41],
+        [75.4, 40.9],
+        [74.7, 41],
+        [73.9, 42.7],
+        [73.2, 46.6],
+        [72.5, 47.6],
+        [63.2, 44.9],
+        [55.2, 45.6],
+        [52.8, 47.8],
+        [49.5, 52.7],
+        [42.7, 50.5],
+        [38.5, 47.8],
+        [34.4, 47.8],
+        [32.6, 48.7],
+        [32.1, 50],
+        [27.5, 49.5],
+        [18.2, 46.1],
+        [15.2, 44.1],
+        [11, 44.4],
+        [10.5, 43.6],
+        [9.9, 27.6],
+        [15.2, 26.1],
+        [15.3, 20],
+        [16.7, 17.8],
+        [19.6, 15.9],
+        [19.9, 13.7],
+    ];
+}
+
+/** ค่า CSS clip-path: polygon(...) ของท้องฟ้าที่เมฆลอยได้ */
+function riverCloudClipPath(): string
+{
+    return 'polygon(' . implode(',', array_map(static fn (array $p): string => $p[0] . '% ' . $p[1] . '%', riverCloudPolygon())) . ')';
 }
 
 /** จุด (x,y) อยู่ภายในพอลิกอนหรือไม่ (ray casting) */
@@ -410,29 +599,33 @@ function riverScale(float $y): float
  */
 function placeKrathongs(array $rows, array $taken = []): array
 {
-    foreach ($rows as &$row) {
+    $depthSpan = (RIVER_Y_NEAR - 2.5) - (RIVER_Y_FAR + 1.5);
+    foreach ($rows as $i => &$row) {
         mt_srand((int) $row['id'] * 7919 + 17);
+        // กระจายความลึก: กระทงลำที่ i ได้ระยะไกล-ใกล้ตามลำดับ golden ratio จึงมีทั้งไกลและใกล้ปะปนกัน ไม่กองอยู่แถวเดียว
+        $depth = fmod(($i + 1) * 0.618034 + (mt_rand(0, 100) / 100) * 0.12, 1.0);
+        $yTarget = RIVER_Y_FAR + 1.5 + $depth * $depthSpan;
         $best = null;
         $bestGap = -1.0;
-        for ($try = 0; $try < 80; $try++) {
-            $x = mt_rand(180, 985) / 10;
-            $y = mt_rand(545, 855) / 10;
+        for ($try = 0; $try < 160; $try++) {
+            $x = mt_rand(40, 990) / 10;
+            $y = round($yTarget + (mt_rand(-20, 20) / 10), 1);
             if (!riverContains($x, $y)) {
                 continue;
             }
             $gap = 99.0;
-            foreach ($taken as [$tx, $ty]) {
-                $gap = min($gap, hypot($x - $tx, ($y - $ty) * RIVER_RATIO));
+            foreach ($taken as $t) {
+                $gap = min($gap, hypot($x - $t[0], ($y - $t[1]) * RIVER_RATIO * 2.4) / ($t[2] ?? 1.0));
             }
             if ($gap > $bestGap) {
                 $bestGap = $gap;
                 $best = [$x, $y];
             }
-            if ($gap >= 7) {
+            if ($gap >= 9) {
                 break;
             }
         }
-        [$x, $y] = $best ?? [52.0, 66.0];
+        [$x, $y] = $best ?? [60.0, 72.0];
         $taken[] = [$x, $y];
         $row['x'] = $x;
         $row['y'] = $y;

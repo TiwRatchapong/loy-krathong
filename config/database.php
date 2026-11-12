@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // เพิ่มเลขนี้ทุกครั้งที่แก้ schema.sql / seed.sql หรือโครงสร้างตาราง เพื่อให้ฐานข้อมูลเดิมถูกอัปเกรดอีกหนึ่งครั้ง
-const DB_SCHEMA_VERSION = 4;
+const DB_SCHEMA_VERSION = 5;
 
 function getDatabase(): PDO
 {
@@ -104,6 +104,8 @@ function migrateDatabase(PDO $pdo, string $databaseDirectory): void
     $ensureColumn('krathongs', 'krathong_type_id', 'INTEGER REFERENCES krathong_types(id)');
     $ensureColumn('krathongs', 'flower_set_id', 'INTEGER REFERENCES flower_sets(id)');
     $ensureColumn('krathongs', 'is_hidden', 'INTEGER NOT NULL DEFAULT 0');   // 1 = ผู้ดูแลซ่อนกระทงนี้
+    $ensureColumn('krathongs', 'owner_token_hash', 'TEXT');                  // SHA-256 ของ token เจ้าของ (ดู ownerHash() ใน includes/functions.php)
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_krathongs_owner ON krathongs(owner_token_hash, id DESC)');
     $ensureColumn('flowers', 'image_path', "TEXT NOT NULL DEFAULT ''");
     $ensureColumn('flowers', 'svg_key', "TEXT NOT NULL DEFAULT ''");
     $ensureColumn('krathong_types', 'svg_key', "TEXT NOT NULL DEFAULT ''");

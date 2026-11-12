@@ -25,13 +25,13 @@ h1, h2, h3 { font-family: inherit; }
 .scene, .scene-shade, .fireflies { position: fixed; inset: 0; pointer-events: none; }
 .scene {
     z-index: -3;
-    background: url('../images/backgrounds/river-night.webp') center 48% / cover no-repeat;
+    background: url('../images/backgrounds/river-lantern-night.webp') center 48% / cover no-repeat;
     transform: scale(1.015);
 }
 .scene-shade {
     z-index: -2;
-    background: linear-gradient(90deg, rgba(7, 27, 23, .78) 0%, rgba(9, 30, 26, .55) 42%, rgba(9, 30, 26, .12) 100%),
-                linear-gradient(180deg, rgba(8, 27, 24, .36) 0%, transparent 42%, rgba(8, 25, 22, .55) 100%);
+    background: linear-gradient(90deg, rgba(5, 10, 38, .74) 0%, rgba(6, 12, 42, .5) 42%, rgba(6, 12, 42, .08) 100%),
+                linear-gradient(180deg, rgba(5, 10, 36, .34) 0%, transparent 42%, rgba(5, 12, 34, .5) 100%);
 }
 .fireflies { z-index: -1; overflow: hidden; }
 .firefly {
@@ -122,7 +122,7 @@ h1 span { color: var(--gold); }
     .brand-mark { font-size: 26px; }
     .hero { width: calc(100% - 40px); min-height: 690px; min-height: calc(88svh - 74px); padding: 55px 0 90px; align-items: center; }
     .scene { background-position: 58% center; }
-    .scene-shade { background: linear-gradient(90deg, rgba(7, 27, 23, .78), rgba(9, 30, 26, .42)), linear-gradient(180deg, rgba(8, 27, 24, .2), rgba(8, 25, 22, .5)); }
+    .scene-shade { background: linear-gradient(90deg, rgba(5, 10, 38, .74), rgba(6, 12, 42, .4)), linear-gradient(180deg, rgba(5, 10, 36, .2), rgba(5, 12, 34, .5)); }
     .eyebrow { font-size: 9px; letter-spacing: .16em; gap: 8px; }
     .eyebrow-line { width: 22px; }
     h1 { font-size: clamp(49px, 13vw, 72px); }
@@ -407,35 +407,30 @@ h1 span { color: var(--gold); }
 .river-page .site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 30; width: 100%; height: 88px; margin: 0; padding: 0 max(4.5vw, calc((100vw - 1280px) / 2)); border-bottom: 0; background: linear-gradient(180deg, rgba(4,14,20,.82) 0%, rgba(4,14,20,.45) 60%, rgba(4,14,20,0) 100%); }
 .river-page .brand, .river-page .nav-link { text-shadow: 0 1px 10px rgba(0,0,0,.65); }
 .river-page .main-nav { gap: clamp(20px, 3vw, 40px); }
-.river-view { position: fixed; inset: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; background: #0b1a2c; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-x; }
+.river-view { position: fixed; inset: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; background: #0a1030; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-x; }
 .river-view::-webkit-scrollbar { display: none; }
 .river-world {
     --w: max(100vw, 177.78svh); --h: calc(var(--w) * .5628);
     position: relative; width: var(--w); height: var(--h);
     margin-top: calc((100svh - var(--h)) / 2);
-    background: url('../images/backgrounds/river-night.webp') center / 100% 100% no-repeat;
+    /* โทนมืด: ไล่เงามุมจอ + ชั้นน้ำเงินเข้มทับภาพ (ปรับความมืดที่ค่า alpha .42 / .55 — มากขึ้น = มืดขึ้น)
+       ใช้ชุดเดียวกันทับชั้นน้ำเคลื่อนไหวด้วย (.river-water::after) ให้ผืนน้ำมืดเท่าภาพ ไม่เห็นขอบสว่างเป็นก้อน */
+    --night-tint: radial-gradient(ellipse 75% 70% at 50% 58%, rgba(2,4,24,0) 40%, rgba(2,4,24,.55) 100%), linear-gradient(rgba(5,8,34,.42), rgba(5,8,34,.42));
+    background: var(--night-tint), #0a1030 url('../images/backgrounds/river-lantern-night.webp') center / 100% 100% no-repeat;
 }
-.river-glint { position: absolute; left: 18%; right: 0; top: 58%; height: 30%; pointer-events: none; opacity: .5; overflow: hidden; }
-.river-glint::before, .river-glint::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; right: -130px; will-change: transform; animation: glint 9s linear infinite; }
-.river-glint::before { background: radial-gradient(ellipse 14px 3px at 20px 10px, rgba(255,235,170,.85), transparent 70%) 0 0 / 90px 42px; }
-.river-glint::after { background: radial-gradient(ellipse 18px 3px at 60px 30px, rgba(255,235,170,.7), transparent 70%) 0 0 / 130px 56px; animation-name: glint-wide; }
-.river-sky { position: absolute; inset: 0 0 45% 0; overflow: hidden; pointer-events: none; }
-.sky-lantern { position: absolute; bottom: -4%; width: calc(var(--w) * .012); height: calc(var(--w) * .016); border-radius: 22%; background: linear-gradient(180deg, #ffd47a, #f0802a); box-shadow: 0 0 calc(var(--w) * .012) calc(var(--w) * .004) rgba(255,160,60,.55); opacity: 0; animation: skyUp var(--t, 18s) ease-in forwards; }
 
-.rk { all: unset; box-sizing: border-box; position: absolute; width: calc(var(--w) * .075 * var(--s, 1)); transform: translate(-50%, -78%); will-change: transform; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.rk { all: unset; box-sizing: border-box; position: absolute; width: calc(var(--w) * .095 * var(--s, 1)); transform: translate(-50%, -78%); will-change: transform; contain: layout; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .rk:focus-visible .rk-tag, .rk:hover .rk-tag { opacity: 1; transform: translate(-50%, 0); }
 .rk:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 12px; }
 .rk-drift { display: block; position: relative; }
 .rk-release, .rk-arc, .rk-bob { display: block; }
 .rk-bob { animation: bob var(--bob, 5s) ease-in-out infinite; transform-origin: 50% 85%; }
-.river-art { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 6px 5px rgba(0,0,0,.35)); }
-.rk:hover .river-art { filter: drop-shadow(0 6px 5px rgba(0,0,0,.35)) brightness(1.12); }
+.river-art { display: block; width: 100%; height: auto; overflow: visible; }
 .rk-tag { position: absolute; left: 50%; top: 100%; margin-top: 4px; transform: translate(-50%, -4px); opacity: 0; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 400; white-space: nowrap; max-width: 160px; overflow: hidden; line-height: 1.5; text-overflow: ellipsis; color: var(--cream); background: rgba(6,22,20,.82); border: 1px solid rgba(232,199,126,.4); transition: opacity .2s, transform .2s; pointer-events: none; }
 .rk-ring, .rk-splash { position: absolute; left: 50%; top: 80%; width: 0; height: 0; pointer-events: none; }
 .rk-ring::before, .rk-ring::after { content: ''; position: absolute; left: calc(var(--w) * -.055); top: calc(var(--w) * -.012); width: calc(var(--w) * .11); height: calc(var(--w) * .024); border-radius: 50%; border: 2px solid rgba(255,226,150,.8); opacity: 0; animation: ringOut 3.2s ease-out infinite; }
 .rk-ring::after { animation-delay: 1.6s; }
 .rk-mine .rk-tag { opacity: 1; transform: translate(-50%, 0); color: #263a27; background: linear-gradient(135deg, #f2d995, #d8ad5d); border-color: transparent; font-weight: 500; }
-.rk-mine .river-art { filter: drop-shadow(0 0 14px rgba(255,214,120,.65)) drop-shadow(0 6px 5px rgba(0,0,0,.35)); }
 .rk-splash b { position: absolute; width: 7px; height: 7px; margin: -3px; border-radius: 50%; background: #cdf5ee; box-shadow: 0 0 6px #cdf5ee; opacity: 0; }
 .rk-mine.splashed .rk-splash b { animation: droplet .95s cubic-bezier(.2,.7,.4,1) forwards; }
 
@@ -464,7 +459,6 @@ h1 span { color: var(--gold); }
 @keyframes fadeIn { to { opacity: 1; } }
 @media (max-width: 760px) {
     .river-page .site-header { height: 70px; padding: 0 18px; }
-    .rk { width: calc(var(--w) * .085 * var(--s, 1)); }
     .river-toast { bottom: max(12px, env(safe-area-inset-bottom)); width: calc(100% - 24px); padding: 12px 14px; border-radius: 16px; gap: 2px; }
     .river-toast strong { font-size: 15px; }
     .river-toast > span { font-size: 12px; line-height: 1.5; }
@@ -578,7 +572,7 @@ img, svg { max-width: 100%; }
 
     /* ฉาก/พื้นหลังแนวตั้ง: เลื่อนจุดโฟกัสไปที่วัด+แม่น้ำ แล้วเพิ่มความเข้มให้อ่านข้อความง่าย */
     .scene { background-position: 60% center; }
-    .scene-shade { background: linear-gradient(90deg, rgba(7, 27, 23, .78), rgba(9, 30, 26, .42)), linear-gradient(180deg, rgba(8, 27, 24, .2), rgba(8, 25, 22, .5)); }
+    .scene-shade { background: linear-gradient(90deg, rgba(5, 10, 38, .74), rgba(6, 12, 42, .4)), linear-gradient(180deg, rgba(5, 10, 36, .2), rgba(5, 12, 34, .5)); }
 
     /* หน้าแรก */
     .hero { width: calc(100% - 2 * var(--gutter)); min-height: min(820px, calc(84svh - var(--header-h))); padding: 56px 0 96px; }
@@ -624,7 +618,6 @@ img, svg { max-width: 100%; }
     /* หน้าแม่น้ำ */
     .river-page .site-header { height: calc(var(--header-h) - 6px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) max(var(--gutter), env(safe-area-inset-right)) 0 max(var(--gutter), env(safe-area-inset-left)); }
     .river-page .main-nav { right: max(var(--gutter), env(safe-area-inset-right)); }
-    .rk { width: calc(var(--w) * .085 * var(--s, 1)); }
     .river-toast { bottom: max(16px, env(safe-area-inset-bottom)); }
 }
 
@@ -736,7 +729,6 @@ img, svg { max-width: 100%; }
 
 /* ---------- หน้าแม่น้ำบนมือถือ/ไอแพด: ล็อกจอ ไม่ให้เลื่อน (กระทงทุกใบอยู่ในจอ) ---------- */
 .river-view.is-locked { overflow: hidden; touch-action: manipulation; overscroll-behavior: none; }
-.river-view.is-locked .rk { width: calc(var(--w) * .06 * var(--s, 1)); }
 
 /* ---------- ฟองคำอธิษฐานเหนือกระทง (แสดงตอนเอาเมาส์ชี้) + ชื่ออยู่ด้านล่าง ---------- */
 .rk-wish { position: absolute; left: 50%; bottom: calc(100% + 4px); z-index: 2; width: max-content; max-width: 210px; padding: 8px 12px; border-radius: 12px; font-size: 12.5px; font-weight: 300; line-height: 1.55; text-align: left; color: var(--cream); background: rgba(6, 22, 20, .9); border: 1px solid rgba(232, 199, 126, .4); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; opacity: 0; transform: translate(calc(-50% + var(--shift, 0px)), 4px); transition: opacity .2s, transform .2s; pointer-events: none; }
@@ -793,4 +785,278 @@ img, svg { max-width: 100%; }
 .rk:not(.rk-mine):not(:hover):not(:focus-visible) .flame-outer,
 .rk:not(.rk-mine):not(:hover):not(:focus-visible) .flame-inner,
 .rk:not(.rk-mine):not(:hover):not(:focus-visible) .flame-glow { animation: none; }
-.firefly { will-change: transform, opacity; }
+
+/* ---- สถิติจำนวนกระทง (ทั้งหมด / วันนี้) ---- */
+.kt-stats { display: flex; justify-content: center; gap: 12px; margin: 6px 0 4px; }
+.kt-stat { display: grid; gap: 2px; min-width: 112px; padding: 10px 18px; text-align: center; border-radius: 14px; border: 1px solid rgba(232,199,126,.28); background: rgba(8,26,23,.55); }
+.kt-stat strong { font-size: 26px; font-weight: 600; line-height: 1.1; color: var(--gold, #e8c77e); font-variant-numeric: tabular-nums; }
+.kt-stat span { font-size: 12px; color: var(--muted, rgba(255,245,223,.7)); letter-spacing: .02em; }
+.kt-stats-hero { justify-content: flex-start; margin: 26px 0 0; }
+.river-toast .kt-stats { margin: 4px 0 2px; }
+.river-toast .kt-stat { min-width: 0; flex: 1; padding: 6px 12px; background: rgba(255,255,255,.04); }
+.river-toast .kt-stat strong { font-size: 22px; }
+.gallery-shell .kt-stats { margin-top: 14px; }
+@media (max-width: 560px) { .kt-stat { min-width: 96px; padding: 8px 12px; } .kt-stat strong { font-size: 22px; } .kt-stats-hero { margin-top: 18px; } }
+@media (max-height: 520px) { .river-toast .kt-stats { display: none; } }
+.kt-stat strong.kt-bump { animation: kt-bump .9s ease-out; }
+@keyframes kt-bump { 0% { transform: scale(1); } 30% { transform: scale(1.25); color: #fff3cf; } 100% { transform: scale(1); } }
+.rk-arrive { animation: rk-arrive 2.2s ease-out; }
+@keyframes rk-arrive { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .kt-stat strong.kt-bump, .rk-arrive { animation: none; } }
+@media (max-height: 520px) { .kt-stats-hero { display: none; } }
+
+
+/* =====================================================================
+   River v2 — คืนจันทร์เต็มดวง (ภาพ river-lantern-night): กระทงเด่นขึ้น + แอนิเมชันเข้ากับภาพ + UI เรียบง่าย
+   ตำแหน่งของทุกชั้นเอฟเฟกต์เป็น % ของภาพ จึงตรงกับภาพทุกขนาดจอ
+   ===================================================================== */
+.river-fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.river-fx > i { position: absolute; display: block; }
+.fx-moon { left: 69.4%; top: 14.4%; width: 25%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle, rgba(255,236,170,.42) 0, rgba(255,222,140,.18) 28%, transparent 62%); animation: moonPulse 6s ease-in-out infinite alternate; }
+
+.river-stars { position: absolute; inset: 0 0 42% 0; pointer-events: none; overflow: hidden; }
+.river-stars i { position: absolute; width: calc(var(--w) * .0016); height: calc(var(--w) * .0016); border-radius: 50%; background: #fff6d8; opacity: 0; animation: starTwinkle var(--t, 4s) ease-in-out var(--d, 0s) infinite; }
+.river-stars i.big { width: calc(var(--w) * .011); height: calc(var(--w) * .011); border-radius: 0; background: radial-gradient(circle, #fff 0 8%, rgba(255,246,216,.75) 14%, transparent 34%), linear-gradient(90deg, transparent 38%, rgba(255,246,216,.9) 50%, transparent 62%) center / 100% 8% no-repeat, linear-gradient(180deg, transparent 38%, rgba(255,246,216,.9) 50%, transparent 62%) center / 8% 100% no-repeat; transform: translate(-50%, -50%); }
+
+/* แสงสะท้อนจันทร์บนผิวน้ำ: เสาแสงสีทอง + ประกายกระเพื่อมทั่วผืนน้ำ */
+.river-orbs { position: absolute; inset: 0; pointer-events: none; }
+.river-orbs i { position: absolute; width: calc(var(--w) * .0042 * var(--z, 1)); height: calc(var(--w) * .0042 * var(--z, 1)); border-radius: 50%; background: #ffe7a6; box-shadow: 0 0 calc(var(--w) * .007) calc(var(--w) * .0016) rgba(255,196,96,.7); opacity: 0; animation: orbFloat var(--t, 7s) ease-in-out var(--d, 0s) infinite; }
+
+/* โคมลอยฟ้า (ขึ้นจากชายฝั่ง โยกเอนและเล็กลงเมื่อสูงขึ้น) */
+.sky-lantern { all: unset; position: absolute; display: block; left: 0; bottom: -2%; width: calc(var(--w) * var(--ls, .014)); height: calc(var(--w) * var(--ls, .014) * 1.28); opacity: 0; animation: skyRise var(--t, 18s) ease-in forwards; will-change: transform, opacity; }
+.sky-lantern b { display: block; width: 100%; height: 100%; clip-path: polygon(14% 0, 86% 0, 100% 100%, 0 100%); border-radius: 18% 18% 6% 6%; background: linear-gradient(180deg, #ffb865 0%, #ff9a45 55%, #ffd88a 100%); box-shadow: inset 0 -35% 50% rgba(255,232,160,.8); animation: lanternSway var(--sw, 4.5s) ease-in-out infinite alternate; transform-origin: 50% 0; filter: drop-shadow(0 0 calc(var(--w) * .008) rgba(255,170,70,.85)); }
+
+/* ---- กระทง: ใหญ่ขึ้น เรืองแสง และสะท้อนผิวน้ำ ---- */
+.rk::before { content: ''; position: absolute; left: 50%; top: 42%; width: max(100%, 44px); height: max(72%, 44px); transform: translate(-50%, -50%); }   /* พื้นที่แตะกว้างขึ้นสำหรับกระทงเล็ก */
+.rk-drift { isolation: isolate; }
+.rk-drift::before { content: ''; position: absolute; left: 50%; top: 44%; width: 165%; aspect-ratio: 1.15; transform: translate(-50%, -50%); z-index: -1; pointer-events: none; background: radial-gradient(closest-side, rgba(255,198,100,.46), rgba(255,170,70,.16) 58%, transparent 100%); }
+.rk-drift::after { content: ''; position: absolute; left: 50%; top: 76%; width: 120%; height: 24%; transform: translateX(-50%); z-index: -1; pointer-events: none; border-radius: 50%; background: radial-gradient(ellipse, rgba(255,205,120,.5), rgba(255,180,80,.15) 55%, transparent 75%); }
+.river-art { filter: drop-shadow(0 4px 4px rgba(0,0,24,.55)); }
+.rk:hover .river-art { filter: drop-shadow(0 4px 4px rgba(0,0,24,.55)) brightness(1.15); }
+.rk-mine .river-art { filter: drop-shadow(0 0 12px rgba(255,214,120,.8)) drop-shadow(0 4px 4px rgba(0,0,24,.55)); }
+.rk-mine .rk-drift::before { width: 200%; background: radial-gradient(closest-side, rgba(255,214,120,.6), rgba(255,180,80,.2) 58%, transparent 100%); animation: glowPulse 2.4s ease-in-out infinite alternate; }
+.rk-tag { background: rgba(6,16,40,.88); border-color: rgba(255,214,140,.45); }
+.rk-wish { background: rgba(6,16,40,.92); border-color: rgba(255,214,140,.45); }
+.rk-mine.is-releasing { --fx: calc(var(--w) * -.12); --fy: calc(var(--w) * .1); }   /* ปล่อยจากท่าน้ำล่างซ้าย */
+
+/* ---- UI: ชิปสถิติมุมซ้ายบน + แถบปุ่มล่างบรรทัดเดียว ---- */
+.river-hud { position: fixed; left: max(16px, env(safe-area-inset-left)); top: 92px; z-index: 35; display: flex; align-items: center; gap: 14px; padding: 8px 16px; border-radius: 16px; border: 1px solid rgba(255,214,140,.26); background: rgba(6,16,40,.82); box-shadow: 0 6px 24px rgba(0,0,20,.35); }
+.river-hud-title { margin: 0; font-size: 14px; font-weight: 500; letter-spacing: .02em; color: var(--gold); white-space: nowrap; }
+.river-hud .kt-stats { margin: 0; gap: 14px; justify-content: flex-start; }
+.river-hud .kt-stat { display: flex; align-items: baseline; gap: 6px; min-width: 0; padding: 0; border: 0; background: none; text-align: left; }
+.river-hud .kt-stat + .kt-stat { padding-left: 14px; border-left: 1px solid rgba(255,214,140,.28); }
+.river-hud .kt-stat strong { font-size: 19px; }
+.river-hud .kt-stat span { font-size: 12px; }
+
+.river-page .river-toast { left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); width: auto; max-width: min(600px, calc(100% - 24px)); display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 8px 8px 8px 20px; border-radius: 999px; text-align: left; border: 1px solid rgba(255,214,140,.3); background: rgba(6,16,40,.9); box-shadow: 0 10px 34px rgba(0,0,20,.45); transition: opacity .6s, transform .6s, padding .5s; }
+.river-toast-msg { margin: 0; display: grid; gap: 1px; min-width: 0; max-width: 340px; overflow: hidden; transition: max-width .6s, opacity .5s; }
+.river-toast-msg strong { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.river-toast-msg span { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.river-page .river-toast .river-toast-actions { margin: 0; flex-wrap: nowrap; flex: none; }
+.river-page .river-toast .river-toast-actions .button { min-height: 42px; padding: 0 18px; font-size: 14px; white-space: nowrap; width: auto; }
+.river-page .river-toast .river-toast-actions .button-ghost { display: inline-flex; background: rgba(255,255,255,.06); }
+.river-page .river-toast.is-compact { padding-left: 8px; }
+.river-page .river-toast.is-compact .river-toast-msg { max-width: 0; opacity: 0; }
+.river-page .river-toast[role="alert"] { padding: 12px 22px; border-radius: 18px; }
+
+.wish-dialog { background: #0a1230; }
+.river-page .wish-dialog::backdrop { background: rgba(2,6,22,.78); }
+
+@keyframes moonPulse { from { opacity: .6; transform: translate(-50%, -50%) scale(1); } to { opacity: 1; transform: translate(-50%, -50%) scale(1.08); } }
+@keyframes lampFlicker { 0% { opacity: .7; transform: translate(-50%, -50%) scale(.95); } 40% { opacity: 1; } 70% { opacity: .78; } 100% { opacity: .95; transform: translate(-50%, -50%) scale(1.06); } }
+@keyframes mistDrift { from { transform: translateX(-6%); } to { transform: translateX(6%); } }
+@keyframes starTwinkle { 0%, 100% { opacity: 0; transform: scale(.6); } 50% { opacity: .95; transform: scale(1.15); } }
+@keyframes orbFloat { 0%, 100% { opacity: 0; transform: translate(0, 0) scale(.7); } 25%, 75% { opacity: .95; } 50% { opacity: .5; transform: translate(calc(var(--w) * .004), calc(var(--w) * -.003)) scale(1); } }
+@keyframes skyRise { 0% { opacity: 0; transform: translate3d(0, 0, 0) scale(.4); } 14% { opacity: .95; } 80% { opacity: .85; } 100% { opacity: 0; transform: translate3d(var(--dx, 30px), calc(var(--h) * var(--rise, -.5)), 0) scale(.85); } }
+@keyframes lanternSway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+
+/* มือถือ / ไอแพด (จอล็อก ไม่เลื่อน) */
+@media (max-width: 760px) {
+    .river-hud { top: 78px; gap: 10px; padding: 7px 12px; border-radius: 14px; }
+    .river-hud-title { font-size: 12.5px; }
+    .river-hud .kt-stats { gap: 10px; }
+    .river-hud .kt-stat + .kt-stat { padding-left: 10px; }
+    .river-hud .kt-stat strong { font-size: 16px; }
+    .river-hud .kt-stat span { font-size: 11px; }
+    .river-page .river-toast { max-width: calc(100% - 20px); gap: 8px; padding: 7px 7px 7px 16px; }
+    .river-toast-msg { max-width: 190px; }
+    .river-toast-msg strong { font-size: 13px; }
+    .river-toast-msg span { font-size: 11.5px; }
+    .river-page .river-toast .river-toast-actions { gap: 6px; }
+    .river-page .river-toast .river-toast-actions .button { min-height: 40px; padding: 0 14px; font-size: 13px; }
+}
+@media (max-width: 430px) {
+    .river-hud { flex-direction: column; align-items: flex-start; gap: 3px; }
+    .river-toast-msg span { display: none; }
+}
+@media (max-height: 520px) {
+    .river-hud { top: 62px; padding: 5px 12px; }
+    .river-hud-title { display: none; }
+    .river-hud .kt-stats { display: flex; }
+    .river-page .river-toast { padding-top: 5px; padding-bottom: 5px; }
+    .river-page .river-toast .river-toast-actions .button { min-height: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .fx-moon, .fx-shore, .fx-sky, .fx-lamp, .fx-mist, .rw-band > i, .river-glint i, .rw-sheen, .river-stars i, .river-orbs i, .rk-mine .rk-drift::before { animation: none; }
+    .river-stars i, .river-orbs i { opacity: .7; }
+}
+
+.river-orbs i.air { animation-name: airFloat; animation-timing-function: ease-in-out; }
+@keyframes airFloat { 0%, 100% { opacity: 0; transform: translate(0, 0) scale(.6); } 30%, 70% { opacity: .95; } 50% { opacity: .6; transform: translate(calc(var(--w) * .012), calc(var(--w) * -.01)) scale(1); } }
+
+
+
+/* =====================================================================
+   River v3 — ภาพ river-lantern-night (ทะเลสาบยามค่ำ มีโคมลอย วัดไทย และท่าไม้)
+   ทุกตำแหน่งเป็น % ของภาพ ตรงกับภาพทุกขนาดจอ
+   ===================================================================== */
+/* แสงจากฝั่งตรงข้าม: หน้าต่างวัด/ศาลา เรืองและกะพริบเบา ๆ */
+.fx-shore { transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(ellipse closest-side, rgba(255,196,96,.42) 0, rgba(255,170,70,.16) 48%, transparent 100%); animation: shoreGlow var(--t, 4s) ease-in-out var(--d, 0s) infinite alternate; }
+/* โคมไฟบนเสาริมท่า (ซ้าย) และประกายแสงบนท่าไม้ */
+.fx-lamp { transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle, rgba(255,190,90,.55) 0, rgba(255,170,70,.18) 42%, transparent 70%); animation: lampFlicker 2.6s ease-in-out infinite alternate; }
+.fx-lamp-post { left: 5.9%; top: 47.6%; width: 11%; aspect-ratio: 1; }
+.fx-lamp-dock { left: 21%; top: 93.6%; width: 6%; aspect-ratio: 1; animation-duration: 3.4s; animation-delay: -1.2s; }
+.fx-mist { left: -10%; top: 57.6%; width: 120%; height: 8%; background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(170,170,255,.2), transparent 72%); animation: mistDrift 38s ease-in-out infinite alternate; }
+.fx-mist-b { top: 60.6%; height: 6%; opacity: .75; animation-duration: 52s; animation-direction: alternate-reverse; }
+/* แสงเรืองรอบโคมลอยที่วาดอยู่ในภาพ: กะพริบและลอยเอื่อย ๆ */
+.fx-sky { transform: translate(-50%, -50%); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,184,92,.5), rgba(255,160,70,.16) 55%, transparent 100%); animation: skyGlow var(--t, 3s) ease-in-out var(--d, 0s) infinite alternate; will-change: transform, opacity; }
+/* ดาวตกเป็นระยะ (ในภาพมีดาวตกอยู่แล้ว 2 ดวง) */
+
+/* ---- น้ำเคลื่อนไหว (ถูกตัดด้วย clip-path ผืนน้ำ) ---- */
+.river-water { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+/* แถบน้ำแต่ละแถบแสดงภาพพื้นหลังส่วนนั้นซ้ำแล้วแกว่งซ้ายขวาเบา ๆ ต่างจังหวะกัน เกิดเป็นคลื่นระลอกทั้งภาพสะท้อนและผิวน้ำ */
+.rw-band { position: absolute; left: 0; right: 0; top: calc(var(--t) * 100%); height: calc(var(--hh) * 100%); overflow: hidden; }
+.rw-band > i { position: absolute; inset: 0; background: url('../images/backgrounds/river-lantern-night.webp') 0 calc(var(--t) * var(--h) * -1) / var(--w) var(--h) no-repeat; will-change: transform; animation: waveSway var(--dur, 6s) ease-in-out var(--del, 0s) infinite alternate; }
+/* ประกายระลอกคลื่นไหลผ่านผืนน้ำ: ไกลเล็กละเอียด ใกล้ใหญ่ขึ้น (ทุกชั้นวนต่อเนื่องไม่สะดุด) */
+.river-glint { position: absolute; inset: 0; display: block; }
+.river-glint i { position: absolute; left: 0; width: calc(100% + var(--tile)); display: block; will-change: transform; background-repeat: repeat; animation: glintFlow var(--dur) linear infinite; }
+.river-glint .g1, .river-glint .g2, .river-glint .g3 {
+    background-image: radial-gradient(ellipse calc(var(--tile) * .2) calc(var(--tile) * .02) at 24% 26%, rgba(196,208,255,.62), transparent 72%),
+                      radial-gradient(ellipse calc(var(--tile) * .15) calc(var(--tile) * .016) at 68% 72%, rgba(170,186,255,.5), transparent 72%);
+    background-size: var(--tile) calc(var(--tile) * .3);
+}
+.river-glint .g1 { --tile: calc(var(--w) * .055); --dur: 14s; top: 63.4%; height: 14%; opacity: .8; }
+.river-glint .g2 { --tile: calc(var(--w) * .085); --dur: 17s; top: 77%; height: 12%; opacity: .85; animation-direction: reverse; }
+.river-glint .g3 { --tile: calc(var(--w) * .125); --dur: 21s; top: 88.5%; height: 12%; opacity: .9; }
+/* ประกายสีทองบนเสาแสงจันทร์ (เฉพาะแนวที่จันทร์สะท้อนในภาพ) */
+.river-glint .gold, .river-glint .col { left: 53%; width: 27%; top: 63.4%; height: 36.6%; }
+.river-glint .gold { --tile: calc(var(--w) * .05); --dur: 9s; width: calc(27% + var(--tile)); animation-name: glintFlow; background-image: radial-gradient(ellipse calc(var(--tile) * .22) calc(var(--tile) * .022) at 28% 24%, rgba(255,236,170,.9), transparent 72%), radial-gradient(ellipse calc(var(--tile) * .17) calc(var(--tile) * .018) at 72% 70%, rgba(255,226,150,.75), transparent 72%); background-size: var(--tile) calc(var(--tile) * .28); -webkit-mask-image: radial-gradient(ellipse 50% 70% at 62% 0, #000 30%, transparent 78%); mask-image: radial-gradient(ellipse 50% 70% at 62% 0, #000 30%, transparent 78%); }
+.river-glint .col { background: radial-gradient(ellipse 36% 100% at 62% 0, rgba(255,226,150,.22), transparent 74%); animation: colPulse 5s ease-in-out infinite alternate; transform-origin: 62% 0; }
+/* แสงวาบจางทั่วผืนน้ำให้ดูมีชีวิต */
+.rw-sheen { position: absolute; inset: 0; display: block; background: linear-gradient(100deg, transparent 30%, rgba(160,176,255,.10) 48%, transparent 66%) -60% 0 / 60% 100% no-repeat; animation: sheen 11s ease-in-out infinite; }
+
+/* โคมลอยที่สร้างเพิ่ม: ขึ้นจากแนวต้นไม้ฝั่งตรงข้าม (y ≈ 58–60% ของภาพ) ผ่านท้องฟ้า */
+.river-sky { position: absolute; inset: 0 0 40% 0; overflow: hidden; pointer-events: none; -webkit-mask-image: linear-gradient(to top, transparent 0, #000 12%); mask-image: linear-gradient(to top, transparent 0, #000 12%); }
+
+@keyframes shoreGlow { from { opacity: .5; transform: translate(-50%, -50%) scale(.94); } to { opacity: 1; transform: translate(-50%, -50%) scale(1.06); } }
+@keyframes skyGlow { from { opacity: .45; transform: translate(-50%, -50%) scale(.9); } to { opacity: 1; transform: translate(calc(-50% + var(--w) * .0012 * var(--bx, 1)), calc(-50% - var(--w) * .0016)) scale(1.1); } }
+@keyframes waveSway { from { transform: translate3d(calc(var(--w) * var(--amp, .002) * -1), 0, 0); } to { transform: translate3d(calc(var(--w) * var(--amp, .002)), 0, 0); } }
+@keyframes glintFlow { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(calc(var(--tile) * -1), 0, 0); } }
+@keyframes colPulse { from { opacity: .55; transform: scaleX(.9); } to { opacity: 1; transform: scaleX(1.08); } }
+@keyframes sheen { 0% { background-position: -60% 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { background-position: 160% 0; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .river-glint i, .rw-sheen, .rw-band > i { animation: none; } }
+
+
+/* ---- กระทงของเรา: ใหญ่ เด่น และแสดงคำอธิษฐานตลอด (คนอื่นแสดงเมื่อชี้/แตะ) ---- */
+.rk-mine .rk-wish { opacity: 1; transform: translate(calc(-50% + var(--shift, 0px)), 0); max-width: min(230px, 60vw); padding: 7px 12px; font-size: 13px; font-weight: 400; line-height: 1.55; -webkit-line-clamp: 3; line-clamp: 3; border-color: rgba(255,214,140,.42); background: rgba(10,16,52,.42); box-shadow: none; text-shadow: 0 1px 5px rgba(0,0,10,.9), 0 0 2px rgba(0,0,10,.8); transition: opacity .9s, transform .9s; }
+.rk-mine .rk-wish::before { content: '✦ คำอธิษฐานของคุณ'; display: block; margin-bottom: 1px; font-size: 10.5px; letter-spacing: .04em; color: var(--gold); }
+.rk-mine.is-releasing:not(.splashed) .rk-wish { opacity: 0; transform: translate(calc(-50% + var(--shift, 0px)), 8px); }
+.rk-mine .rk-tag { font-size: 13px; padding: 4px 14px; box-shadow: 0 0 16px rgba(255,214,120,.5); }
+
+/* ฟองคำอธิษฐานของคนอื่น (ตอนชี้/แตะ): โปร่งขึ้น ไม่บังฉากด้านหลัง */
+.rk-wish { background: rgba(8,14,46,.5); border-color: rgba(255,214,140,.35); text-shadow: 0 1px 5px rgba(0,0,10,.9), 0 0 2px rgba(0,0,10,.8); }
+
+/* ---- เมฆลอย (สร้างด้วย JS: ก้อนนุ่มโปร่งแสงหลายก้อนซ้อนกัน ลอยช้า ๆ เฉพาะในพื้นที่ท้องฟ้าที่กำหนด) เมฆเดิมในภาพปล่อยไว้ ----
+   .river-clouds ถูกตัดด้วย polygon (clip-path ใส่จาก pages/river.php → riverCloudClipPath()) การเคลื่อนที่/ความจางทำใน river.js */
+.river-clouds { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.sky-cloud { position: absolute; display: block; opacity: 0; transform: translate3d(-50%, -50%, 0); will-change: transform, opacity; }
+.sky-cloud i { position: absolute; display: block; border-radius: 50%; background: radial-gradient(ellipse at 50% 32%, rgba(176,168,250,.62) 0, rgba(118,108,214,.4) 48%, rgba(84,76,184,0) 72%); }
+
+/* ---- โลโก้ TV5HD Online: ตราเล็กในหัวเว็บ (พื้นโปร่งใส) และแผ่นพื้นขาวนวลสำหรับโลโก้เต็มที่มีตัวอักษรสีเข้ม ---- */
+.brand-sep { width: 1px; height: 26px; margin: 0 4px 0 6px; background: linear-gradient(180deg, transparent, rgba(232,199,126,.7), transparent); }
+.brand-partner { display: block; height: 36px; width: auto; filter: drop-shadow(0 0 10px rgba(255,245,223,.22)); }
+.partner-plate { display: block; width: fit-content; margin: 44px auto 0; padding: 12px 22px; border-radius: 20px; background: #fffdf6; box-shadow: 0 0 0 1px rgba(232,199,126,.5), 0 12px 34px rgba(0,0,0,.28), 0 0 38px rgba(232,199,126,.16); }
+.partner-plate img { display: block; height: 104px; width: auto; mix-blend-mode: multiply; }
+@media (max-width: 760px) {
+    .brand-sep { height: 22px; margin: 0 2px 0 3px; }
+    .brand-partner { height: 30px; }
+    .partner-plate { margin-top: 34px; padding: 10px 18px; }
+    .partner-plate img { height: 84px; }
+}
+@media (max-width: 380px) { .brand-sep, .brand-partner { display: none; } }
+
+.river-water::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: var(--night-tint); }
+
+/* ดาวตก (สร้างและเคลื่อนที่ด้วย JS ใน river.js): พุ่งจากขวาลงซ้าย หัวสว่างอยู่ปลายซ้ายของเส้น หางไล่จางไปทางขวา */
+.fx-meteor { position: absolute; height: 2px; opacity: 0; border-radius: 2px; transform-origin: 0% 50%; will-change: transform, opacity; background: linear-gradient(270deg, rgba(190,205,255,0) 0%, rgba(200,212,255,.45) 65%, rgba(255,255,255,.95) 100%); filter: drop-shadow(0 0 3px rgba(200,210,255,.8)); }
+.fx-meteor::after { content: ''; position: absolute; left: -1px; top: 50%; width: 4px; height: 4px; margin-top: -2px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px 2px rgba(210,222,255,.85); }
+
+/* เมนูมือถือที่เปิดอยู่ต้องอยู่เหนือสถิติ (35) และปุ่มเสียง (60) */
+.site-header:has(.main-nav.open), .river-page .site-header:has(.main-nav.open) { z-index: 70; }
+
+
+/* =====================================================================
+   หน้าแม่น้ำ: โหมดเบาสุด (ใช้กับทุกอุปกรณ์)
+   เหลือแค่ น้ำ (canvas ใบเดียว ความละเอียดต่ำ) · โคมลอย · แสงระยิบระยับ · กระทง
+   ===================================================================== */
+.river-view.is-paused *, .river-view.is-paused *::before, .river-view.is-paused *::after { animation-play-state: paused !important; }
+
+/* กระทง: ไม่มีเงาเรือง/แสงไล่สี/โยก — ขยับด้วย transform จาก JS อย่างเดียว */
+.river-art, .rk:hover .river-art { filter: none; }
+.rk-mine .river-art { filter: drop-shadow(0 0 8px rgba(255,214,120,.8)); }
+.rk-drift::before, .rk-drift::after { display: none; }
+.rk-bob { animation: none; }
+
+/* น้ำ: canvas ใบเดียว (วาดที่ ~15fps ใน river.js) */
+.river-wave { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* แสงระยิบระยับ: กะพริบเป็นกลุ่ม (opacity อย่างเดียว) */
+.river-stars .sg, .river-orbs .og { position: absolute; inset: 0; will-change: opacity; }
+.river-stars .sg { animation: sgTwinkle var(--t, 4s) ease-in-out var(--d, 0s) infinite alternate; }
+.river-orbs .og { animation: ogFloat var(--t, 7s) ease-in-out var(--d, 0s) infinite alternate; }
+.river-stars .sg i, .river-orbs .og i { animation: none; opacity: .9; }
+@keyframes sgTwinkle { from { opacity: .25; } to { opacity: 1; } }
+@keyframes ogFloat { from { opacity: .3; } to { opacity: 1; } }
+
+/* โคมลอย: ขึ้นด้วย transform + opacity เท่านั้น ไม่มี clip-path / filter / mask / การโยก */
+.river-sky { -webkit-mask-image: none; mask-image: none; }
+.sky-lantern b { clip-path: none; border-radius: 22% 22% 10% 10%; animation: none; filter: none; box-shadow: 0 0 calc(var(--w) * .004) rgba(255,170,70,.7), inset 0 -35% 50% rgba(255,232,160,.8); }
+
+/* ขนาดกระทงบนมือถือ/ไอแพด (จอล็อก): เล็กกว่าเดสก์ท็อป (.095) ประมาณ 25–30% */
+.river-view.is-locked .rk { width: calc(var(--w) * .066 * var(--s, 1)); }                          /* ไอแพด / จอใหญ่ */
+@media (max-width: 760px) { .river-view.is-locked .rk { width: calc(var(--w) * .06 * var(--s, 1)); } }    /* มือถือแนวตั้ง */
+@media (max-height: 520px) { .river-view.is-locked .rk { width: calc(var(--w) * .075 * var(--s, 1)); } }  /* มือถือแนวนอน */
+
+/* ---- คำเปิดหน้า "คืนเพ็ญ เดือนสิบสอง": เฉพาะหน้าแม่น้ำ ----
+   แถวเดียว: พระจันทร์อยู่หน้าข้อความ แล้วมีเส้นอยู่ใต้ จางเข้า-ค้าง-จางออกพร้อมกันทั้งก้อน
+   ขนาดทุกอย่างอิงตัวแปร --fs ตัวเดียว (ขนาดตัวอักษร) พระจันทร์จึงสเกลตามข้อความเสมอ
+   ใช้ opacity/transform อย่างเดียว เบาทุกอุปกรณ์ เล่นครั้งเดียว ไม่บังการกด */
+.river-page .moon-intro { --fs: clamp(30px, min(5.2vw, 9.5vh), 72px); position: fixed; left: 0; right: 0; margin: 0 auto; top: 19vh; top: 19svh; z-index: 45; width: max-content; max-width: calc(100% - 24px);   /* จัดกลางด้วย margin auto: ไม่ต้องรอวัดความกว้างข้อความ ไม่มีวูบข้าง */ pointer-events: none; text-align: center; opacity: 0; visibility: hidden; animation: moonIntroBox 6.5s ease-in-out .5s both; }
+.river-page .moon-intro::before { content: ''; position: absolute; left: 50%; top: 50%; width: 150%; height: 190%; transform: translate(-50%, -50%); z-index: -1; background: radial-gradient(closest-side, rgba(3,6,28,.5), rgba(3,6,28,.2) 60%, transparent 100%); }   /* พื้นมืดนุ่ม ๆ ให้ตัวอักษรเด่น */
+.river-page .moon-intro-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; column-gap: calc(var(--fs) * .22); row-gap: clamp(8px, 1.6vh, 16px); }
+.river-page .moon-intro-icon { display: block; flex: none; width: calc(var(--fs) * 1.05); height: auto; overflow: visible; animation: moonIntroIcon 6.5s ease-in-out .5s both; }
+.river-page .moon-intro-text { display: flex; flex-wrap: wrap; justify-content: center; column-gap: .4em; margin: 0; color: #f3d894; font-family: 'Charmonman', 'Kanit', serif; font-size: var(--fs); font-weight: 400; line-height: 1.2;
+    text-shadow: 0 0 14px rgba(255,226,150,.8), 0 0 40px rgba(232,199,126,.6), 0 0 80px rgba(232,199,126,.35), 0 2px 14px rgba(0,0,0,.85); animation: moonIntroText 6.5s ease-in-out .5s both; }
+.river-page .moon-intro-line { display: block; flex: 0 0 100%; height: 2px; background: linear-gradient(90deg, transparent, rgba(243,216,148,.95), transparent); transform: scaleX(0); animation: moonIntroLine 6.5s ease-in-out .5s both; }
+/* รอให้ฟอนต์พร้อมก่อนค่อยเริ่มเล่น (river.js ใส่ .is-ready) กันแว๊บตอนฟอนต์สลับ */
+.river-page .moon-intro:not(.is-ready), .river-page .moon-intro:not(.is-ready) * { animation-play-state: paused; }
+@keyframes moonIntroBox { 0% { opacity: 0; visibility: visible; } 22% { opacity: 1; } 72% { opacity: 1; } 99% { opacity: 0; visibility: visible; } 100% { opacity: 0; visibility: hidden; } }
+@keyframes moonIntroText { 0% { transform: translateY(12px) scale(1.06); } 22%, 72% { transform: none; } 100% { transform: translateY(-10px) scale(1.02); } }
+@keyframes moonIntroIcon { 0% { transform: scale(.6); } 22% { transform: scale(1); } 72% { transform: scale(1.06); } 100% { transform: scale(1.15); } }
+@keyframes moonIntroLine { 0% { transform: scaleX(0); } 30%, 72% { transform: scaleX(1); } 100% { transform: scaleX(1.12); } }
+/* มือถือแนวตั้ง: ให้ทั้งแถวพอดีหนึ่งบรรทัด (กว้าง ~360px ก็ไม่ตกบรรทัด) */
+@media (max-width: 600px) { .river-page .moon-intro { --fs: clamp(24px, 7.2vw, 40px); } }
+/* มือถือแนวนอน / จอเตี้ย */
+@media (max-height: 460px) and (min-width: 601px) { .river-page .moon-intro { --fs: clamp(22px, 8.5vh, 36px); top: 22vh; top: 22svh; } }
+@media (prefers-reduced-motion: reduce) { .river-page .moon-intro-text, .river-page .moon-intro-icon { animation: none; } .river-page .moon-intro-line { animation: none; transform: scaleX(1); } }
+/* ปรับตำแหน่ง/ขนาดเฉพาะอุปกรณ์: มือถือขยับลง · ไอแพดแนวตั้งใหญ่ขึ้นและขยับลง (คอม/ไอแพดแนวนอนคงเดิม) */
+@media (max-width: 600px) { .river-page .moon-intro { top: 25vh; top: 25svh; } }
+@media (min-width: 601px) and (orientation: portrait) { .river-page .moon-intro { --fs: clamp(46px, 8.2vw, 88px); top: 25vh; top: 25svh; } }
+
+/* ซ่อนฉากจนกว่า river.js จะเลื่อนมาตรงกลางเสร็จ (is-ready) กันแว๊บที่ขอบซ้ายตอนเปิด/รีเฟรช
+   กันพลาด: ถ้า JS ไม่ทำงาน ฉากจะโผล่เองหลัง 2 วินาที */
+.river-view:not(.is-ready) { opacity: 0; animation: riverFailsafe 0s linear 2s forwards; }
+.river-view.is-ready { animation: riverFadeIn .35s ease-out; }
+@keyframes riverFailsafe { to { opacity: 1; } }
+@keyframes riverFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .river-view.is-ready { animation: none; } }
