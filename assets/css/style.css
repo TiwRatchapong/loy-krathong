@@ -1060,3 +1060,31 @@ img, svg { max-width: 100%; }
 @keyframes riverFailsafe { to { opacity: 1; } }
 @keyframes riverFadeIn { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .river-view.is-ready { animation: none; } }
+
+/* ---------- ฉากกระทง: กลืนไปกับพื้นหลังเว็บ (ไม่มีกรอบ/พื้นสี่เหลี่ยม) ---------- */
+.release {
+    border: 0; border-radius: 0; background: none; overflow: visible; isolation: isolate; clip-path: inset(0 -30px -10px -30px);
+}
+.release::before {                      /* แสงจันทร์/แสงเทียนนวลๆ ด้านหลังกระทง */
+    content: ""; position: absolute; left: 50%; top: 48%; width: 92%; height: 92%;
+    transform: translate(-50%, -50%); z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 55%, rgba(255,205,120,.16), rgba(120,150,255,.07) 45%, transparent 70%);
+    filter: blur(6px);
+}
+.rel-sky { inset: -20px -10px 36% -10px; overflow: hidden;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 70%, #000 40%, transparent 78%);
+            mask-image: radial-gradient(ellipse at 50% 70%, #000 40%, transparent 78%); }
+.rel-water {
+    left: -6%; right: -6%; height: 40%; overflow: hidden;
+    background: linear-gradient(180deg, rgba(34,70,120,.0) 0%, rgba(40,95,125,.38) 28%, rgba(10,38,60,.5) 100%);
+    -webkit-mask-image: radial-gradient(ellipse 62% 100% at 50% 40%, #000 35%, rgba(0,0,0,.55) 62%, transparent 100%);
+            mask-image: radial-gradient(ellipse 62% 100% at 50% 40%, #000 35%, rgba(0,0,0,.55) 62%, transparent 100%);
+}
+.rel-water::after {                     /* เงาแสงเทียนสะท้อนบนผืนน้ำ */
+    content: ""; position: absolute; left: 50%; top: 4%; width: 46%; height: 92%; transform: translateX(-50%);
+    background: radial-gradient(ellipse at 50% 0, rgba(255,200,110,.32), transparent 68%);
+    animation: glowPulse 2.4s ease-in-out infinite alternate;
+}
+.wave { background: radial-gradient(circle at 12px 14px, transparent 11px, rgba(170,205,255,.38) 12px, rgba(170,205,255,.38) 13px, transparent 14px) 0 0 / 24px 14px repeat-x; opacity: .5; }
+.rel-ripples i { border-color: rgba(255,225,160,.5); }
+.rel-boat { filter: drop-shadow(0 10px 16px rgba(0,0,0,.35)); }

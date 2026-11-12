@@ -86,6 +86,9 @@
 
     // ---- บันทึกเป็นรูปภาพ (PNG 1080×1350 สำหรับโพสต์โซเชียล) วาดในเบราว์เซอร์ ไม่ต้องใช้เซิร์ฟเวอร์ ----
     const saveBtn = document.getElementById('saveImage');
+    function loadImg(src) {
+        return new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
+    }
     saveBtn?.addEventListener('click', async () => {
         const art = document.querySelector('.view-art');
         const sprites = [...document.querySelectorAll('svg[width="0"][height="0"]')];   // sprite ซ่อนไว้ (กระทง/ดอกไม้/ไล่สี) อาจมีหลายชุด
@@ -109,17 +112,25 @@
 
             const c = document.createElement('canvas'); c.width = W; c.height = H;
             const g = c.getContext('2d');
-            const sky = g.createLinearGradient(0, 0, 0, H);
-            sky.addColorStop(0, '#07131f'); sky.addColorStop(.55, '#0f2a3a'); sky.addColorStop(1, '#0b2a26');
-            g.fillStyle = sky; g.fillRect(0, 0, W, H);
-            for (let i = 0; i < 70; i++) {   // ดาว
-                g.fillStyle = `rgba(255,240,200,${.15 + Math.random() * .5})`;
-                g.beginPath(); g.arc(Math.random() * W, Math.random() * H * .6, Math.random() * 2 + .4, 0, 7); g.fill();
+            // พื้นหลังใช้ภาพเดียวกับหน้าเว็บ เพื่อให้รูปที่บันทึกดูเป็นชุดเดียวกัน
+            const bg = await loadImg('../assets/images/backgrounds/river-lantern-night.webp');
+            if (bg) {
+                const r = Math.max(W / bg.width, H / bg.height);
+                const bw = bg.width * r, bh = bg.height * r;
+                g.drawImage(bg, (W - bw) / 2, (H - bh) * .48, bw, bh);
+            } else {
+                const sky = g.createLinearGradient(0, 0, 0, H);
+                sky.addColorStop(0, '#0a0f35'); sky.addColorStop(.6, '#101a4e'); sky.addColorStop(1, '#0b2a3a');
+                g.fillStyle = sky; g.fillRect(0, 0, W, H);
             }
-            const moon = g.createRadialGradient(W * .8, 170, 10, W * .8, 170, 130);
-            moon.addColorStop(0, 'rgba(255,236,170,.95)'); moon.addColorStop(.45, 'rgba(255,226,150,.35)'); moon.addColorStop(1, 'rgba(255,226,150,0)');
-            g.fillStyle = moon; g.fillRect(0, 0, W, 420);
-            g.fillStyle = 'rgba(30,70,95,.55)'; g.fillRect(0, 760, W, H - 760);   // ผืนน้ำ
+            // เงาไล่สีให้ตัวหนังสืออ่านง่าย และกลืนกับภาพ
+            const shade = g.createLinearGradient(0, 0, 0, H);
+            shade.addColorStop(0, 'rgba(5,10,36,.55)'); shade.addColorStop(.3, 'rgba(5,10,36,.12)');
+            shade.addColorStop(.7, 'rgba(5,12,34,.25)'); shade.addColorStop(1, 'rgba(4,10,30,.78)');
+            g.fillStyle = shade; g.fillRect(0, 0, W, H);
+            const glow = g.createRadialGradient(W / 2, 760, 20, W / 2, 760, 520);   // แสงเทียนรอบกระทง
+            glow.addColorStop(0, 'rgba(255,200,120,.28)'); glow.addColorStop(1, 'rgba(255,200,120,0)');
+            g.fillStyle = glow; g.fillRect(0, 300, W, 900);
             g.drawImage(img, (W - 900) / 2, 330, 900, 900 * (img.height / img.width || 1));
 
             g.textAlign = 'center';
