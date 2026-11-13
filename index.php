@@ -8,6 +8,30 @@ try {
 } catch (Throwable $exception) {
     error_log($exception->getMessage());
 }
+
+// กระทงลอยประดับหน้าแรก (ไม่มีข้อมูล ไม่กดได้) ใช้แบบกระทง/ชุดดอกไม้จริงของระบบ
+$heroBoats = [];
+try {
+    $flowerSets = loadFlowerSets(getDatabase());
+} catch (Throwable $exception) {
+    $flowerSets = [];
+}
+$ktKeys = svgKrathongKeys();
+$flKeys = svgFlowerKeys();
+for ($i = 0; $i < 18; $i++) {
+    $set = $flowerSets ? $flowerSets[array_rand($flowerSets)]['keys'] : [];
+    if (count($set) !== 5) {
+        $set = [];
+        for ($f = 0; $f < 5; $f++) {
+            $set[] = $flKeys[array_rand($flKeys)];
+        }
+    }
+    $heroBoats[] = [
+        'key' => $ktKeys[array_rand($ktKeys)],
+        'flowers' => $set,
+        'bob' => round(4 + mt_rand(0, 25) / 10, 1),
+    ];
+}
 $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหัศจรรย์ริมสายน้ำ';
 ?>
 <!DOCTYPE html>
@@ -26,9 +50,17 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
     <link rel="stylesheet" href="<?= htmlspecialchars(asset('assets/css/style.css', ''), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 <body>
+    <?php renderSvgSprite(); ?>
     <div class="scene" aria-hidden="true"></div>
     <div class="scene-shade" aria-hidden="true"></div>
     <div class="fireflies" id="fireflies" aria-hidden="true"></div>
+    <div class="hero-river" id="heroRiver" aria-hidden="true"
+         data-poly="<?= htmlspecialchars((string) json_encode(riverPolygon()), ENT_QUOTES, 'UTF-8') ?>" data-ratio="<?= RIVER_RATIO ?>"
+         data-y-far="<?= RIVER_Y_FAR ?>" data-y-near="<?= RIVER_Y_NEAR ?>" data-s-far="<?= RIVER_SCALE_FAR ?>" data-s-near="<?= RIVER_SCALE_NEAR ?>">
+        <?php foreach ($heroBoats as $b): ?>
+        <span class="hf" style="--bob:<?= $b['bob'] ?>s"><span class="hf-bob"><?= renderKrathongArt($b['key'], $b['flowers'], '', 'krathong-art river-art') ?></span></span>
+        <?php endforeach; ?>
+    </div>
 
     <header class="site-header">
         <a class="brand" href="index.php" aria-label="ลอยกระทงออนไลน์ หน้าแรก">
@@ -62,25 +94,17 @@ $pageTitle = 'ลอยกระทงออนไลน์ | คืนมหั
                 <?= renderKrathongStats($counts, 'kt-stats-hero', 'pages/live.php') ?>
                 <div class="hero-note"><span class="note-icon">☾</span> เทศกาลแห่งความสุข เริ่มต้นได้จากตรงนี้</div>
             </div>
-            <a class="scroll-hint" href="#about"><span class="scroll-line"></span> เลื่อนลงเพื่อสำรวจ</a>
         </section>
 
-        <section class="intro" id="about">
-            <div class="intro-ornament"><?= svgLotusIcon() ?></div>
-            <p class="section-kicker">A LITTLE WISH, A BEAUTIFUL NIGHT</p>
-            <h2>หนึ่งกระทง <span>หนึ่งคำอธิษฐาน</span></h2>
-            <p class="intro-copy">เลือกกระทงในแบบที่ชอบ เติมดอกไม้ที่ใช่ เขียนคำอธิษฐานจากใจ<br class="desktop-break"> แล้วปล่อยให้กระทงน้อย ๆ ล่องลอยไปบนสายน้ำแห่งความหวัง</p>
-            <a class="text-link" href="pages/create.php">เริ่มต้นสร้างความทรงจำ <span>→</span></a>
-            <div class="partner-plate"><img src="assets/images/ch5-logo.jpg" alt="TV5HD Online" width="428" height="417" loading="lazy"></div>
-        </section>
     </main>
 
-    <footer class="site-footer">
+    <footer class="site-footer" style="background: transparent;">
         <span class="footer-brand"><?= svgLotusIcon() ?> ลอยกระทงออนไลน์</span>
         <span>สร้างความสุขเล็ก ๆ ไปกับสายน้ำ · <a class="footer-link" href="pages/privacy.php">ความเป็นส่วนตัว</a></span>
     </footer>
 
     <script src="<?= htmlspecialchars(asset('assets/js/script.js', ''), ENT_QUOTES, 'UTF-8') ?>"></script>
     <script src="<?= htmlspecialchars(asset('assets/js/audio.js', ''), ENT_QUOTES, 'UTF-8') ?>"></script>
+    <script src="<?= htmlspecialchars(asset('assets/js/home-river.js', ''), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 </html>

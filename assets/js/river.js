@@ -125,12 +125,25 @@
         if (hud && hdr) hud.style.top = `${Math.round(hdr.getBoundingClientRect().bottom) + 4}px`;   // ชิปสถิติอยู่ใต้เมนูเสมอ
         worldW = world.offsetWidth;
         const W = worldW, H = world.offsetHeight;
-        const focus = mine ? parseFloat(mine.dataset.x) / 100 : 0.6;   // ไม่มีกระทงของเรา: โฟกัสแสงจันทร์สะท้อนน้ำ
+        // จุดโฟกัสแนวนอน: เฉพาะ "มือถือ" (จอแคบ ≤760px) เลื่อนมาทางขวาให้เห็นพระจันทร์ (MOON x ≈ 69%) แต่ถ้ามีกระทงของเราต้องยังอยู่ในจอ
+        // คอม/ไอแพด: เหมือนเดิม (กระทงของเรา หรือแสงจันทร์สะท้อนน้ำ)
+        const phone = window.matchMedia('(max-width: 760px)').matches;
+        const mineBoat = boats.find(b => b.isMine);
+        if (phone && mineBoat && !mineBoat.nudged) { mineBoat.nudged = true; mineBoat.u = mineBoat.home[0] = 62; }   // ลงน้ำเยื้องขวาเล็กน้อย ให้เห็นทั้งกระทงและพระจันทร์
+        const halfV = view.clientWidth / 2 / W;
+        // ให้พระจันทร์อยู่มุมบนขวาของจอ (ศูนย์กลางที่ ~64% ของความกว้างจอ เว้นขอบขวา/ปุ่มเมนูไว้) ไม่ใช่กลางจอ
+        const MOON_AT = Math.min(0.64, 1 - (MOON[2] / 100 * W + view.clientWidth * 0.08) / view.clientWidth);
+        const MOON_FOCUS = MOON[0] / 100 - (MOON_AT - 0.5) * 2 * halfV;
+        const mineX = !mine ? null : (phone && mineBoat ? mineBoat.u : parseFloat(mine.dataset.x)) / 100;   // มือถือ: ใช้ตำแหน่งที่เยื้องขวาแล้ว (ไม่ใช่ค่าตั้งต้น 50)
+        const edge = Math.min(0.065, halfV * 0.5);
+        const focus = !phone ? (mineX ?? 0.6)
+            : (mineX === null ? MOON_FOCUS : clamp(MOON_FOCUS, mineX - halfV + edge, mineX + halfV - edge));
         view.scrollLeft = clamp(focus * W - view.clientWidth / 2, 0, Math.max(0, W - view.clientWidth));
         if (!locked) { lo = 0; hi = 100; yMax = 100; return; }
         const padX = Math.min(70, view.clientWidth * 0.12);
-        lo = (view.scrollLeft + padX) / W * 100;
-        hi = (view.scrollLeft + view.clientWidth - padX) / W * 100;
+        const offX = world.offsetLeft;                                  // ภาพแคบกว่าจอ (จอกว้างมาก) ถูกจัดกลางด้วย margin
+        lo = clamp((view.scrollLeft + padX - offX) / W * 100, 0, 100);
+        hi = clamp((view.scrollLeft + view.clientWidth - padX - offX) / W * 100, 0, 100);
         let bottomPx = view.clientHeight - 40;
         if (toast) bottomPx = Math.min(bottomPx, view.clientHeight - toast.offsetHeight - 44);   // เหนือแถบปุ่มด้านล่าง
         const worldTop = world.getBoundingClientRect().top;
@@ -187,62 +200,6 @@
     }
 
 
-    // ---- กระทงไม่ทับกัน: แต่ละลำมีพื้นที่วงรี (กว้างตามขนาดกระทง) ถ้าใกล้กันเกินไปจะเบี่ยงหลบและถูกดันออกจากกัน ----
-    const FOOT_X = 3.6, FOOT_Y = 1.5;                  // ครึ่งความกว้าง/ลึกของตัวกระทง (หน่วย % ความกว้างภาพ ที่ขนาด 1)
-    const MINE_HALO = 1.4;                             // รอบกระทงของเราเว้นที่ว่างเพิ่ม ให้เห็นชัด
-    let FPX = 0, FPY = 0;                              // ผลลัพธ์ของ footprint — ใช้ตัวแปรร่วมแทนการสร้างอาร์เรย์ใหม่ทุกคู่/ทุกเฟรม (ลด GC กระตุก)
-    const footprint = (a, o) => {
-        const k = (a.isMine || o.isMine) ? MINE_HALO : 1;
-        const sa = a.s || 1, so = o.s || 1;
-        FPX = (FOOT_X * sa + FOOT_X * so) * k;
-        FPY = (FOOT_Y * sa + FOOT_Y * so) * k;
-    };
-    function avoid(b, dt) {
-        let ax = 0, ay = 0;
-        for (const o of boats) {
-            if (o === b) continue;
-            footprint(b, o);
-            const dx = b.u - o.u, dy = b.v - o.v;
-            if (Math.abs(dx) > FPX * 2.2 || Math.abs(dy) > FPY * 2.2) continue;   // ไกลเกินไป ไม่ต้องคำนวณ
-            const nx = dx / FPX, ny = dy / FPY, d = Math.sqrt(nx * nx + ny * ny);
-            if (d < 2.2 && d > 1e-6) { const w = (2.2 - d) / d; ax += nx * w; ay += ny * w; }
-        }
-        const mag = Math.sqrt(ax * ax + ay * ay);
-        if (mag > 0.02) b.target += angleDiff(Math.atan2(ay, ax), b.target) * Math.min(1, mag * dt * 2.5);   // เลี้ยวหนีลำที่อยู่ใกล้
-    }
-    function separate() {
-        const n = boats.length;
-        for (let it = 0; it < 2; it++) {
-            for (let i = 0; i < n; i++) {
-                const a = boats[i];
-                for (let j = i + 1; j < n; j++) {
-                    const o = boats[j];
-                    footprint(a, o);
-                    const rx = FPX, ry = FPY;
-                    let dx = a.u - o.u, dy = a.v - o.v;
-                    if (Math.abs(dx) > rx || Math.abs(dy) > ry) continue;
-                    let d = Math.sqrt((dx / rx) * (dx / rx) + (dy / ry) * (dy / ry));
-                    if (d >= 1) continue;
-                    if (d < 1e-4) { dx = 0.01; dy = 0.005; d = Math.sqrt((dx / rx) * (dx / rx) + (dy / ry) * (dy / ry)); }
-                    const f = 1 / d - 1;
-                    const wa = a.isMine ? 0.1 : 1, wo = o.isMine ? 0.1 : 1, tw = wa + wo;
-                    const mAx = dx * f * wa / tw, mAy = dy * f * wa / tw, mOx = -dx * f * wo / tw, mOy = -dy * f * wo / tw;
-                    let moved = false;
-                    if (allowed(a.u + mAx, a.v + mAy)) { a.u += mAx; a.v += mAy; moved = true; }
-                    if (allowed(o.u + mOx, o.v + mOy)) { o.u += mOx; o.v += mOy; moved = true; }
-                    if (!moved) {   // ขอบน้ำดันไม่ได้: ให้ลำที่ไม่ใช่ของเราถอยไปตามแนวที่ว่าง
-                        const t = o.isMine ? a : o;
-                        const mx = t === a ? mAx : mOx, my = t === a ? mAy : mOy;
-                        if (allowed(t.u + mx * 2, t.v)) t.u += mx * 2;
-                        else if (allowed(t.u, t.v + my * 2)) t.v += my * 2;
-                    }
-                    a.target = Math.atan2(mAy, mAx) || a.target;
-                    o.target = Math.atan2(mOy, mOx) || o.target;
-                }
-            }
-        }
-    }
-
     function step(b, dt) {
         const s = scaleAt(b.v / RATIO);
         const look = 1.2 + 1.8 * s;                       // ระยะเผื่อขอบ: กระทงใหญ่ (ใกล้) เผื่อมากกว่า
@@ -250,7 +207,6 @@
         b.wobble += b.wobbleRate * dt;
         b.target += Math.sin(b.wobble) * 0.35 * dt;       // เลี้ยวเบา ๆ ให้ลอยเป็นทางโค้ง
 
-        avoid(b, dt);
         const probe = ang => allowed(b.u + Math.cos(ang) * (v + look), b.v + Math.sin(ang) * (v + look));
         if (!probe(b.target)) {
             // ใกล้ขอบ: หาทิศที่ยังอยู่ในน้ำ (ลองเบี่ยงซ้าย-ขวาสลับกัน)
@@ -291,7 +247,6 @@
             boats.forEach(b => { b.startAt = b.isMine ? t0 + 2400 : t0; });   // กระทงเราเริ่มลอยหลังตกลงน้ำ
             hooks.push((now, dt, n) => {
                 for (const b of boats) if (now >= b.startAt) step(b, dt);
-                if (n % 2 === 0) separate();                                   // O(n²) — ทำทุก 2 เฟรมพอ ตาดูไม่ออก
                 for (const b of boats) if (now >= b.startAt) render(b);
             });
         }
